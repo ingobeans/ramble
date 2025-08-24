@@ -5,6 +5,7 @@ use macroquad::prelude::*;
 pub struct Assets {
     pub entities: Spritesheet,
     pub items: Spritesheet,
+    pub particles: Spritesheet,
 }
 
 impl Default for Assets {
@@ -16,6 +17,10 @@ impl Default for Assets {
             ),
             items: Spritesheet::new(
                 load_ase_texture(include_bytes!("../assets/items.ase"), Some(1)),
+                16.0,
+            ),
+            particles: Spritesheet::new(
+                load_ase_texture(include_bytes!("../assets/particles.ase"), None),
                 16.0,
             ),
         }

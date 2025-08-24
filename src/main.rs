@@ -4,12 +4,16 @@ mod assets;
 mod consts;
 mod enemy;
 mod items;
+mod particles;
 mod player;
+mod projectiles;
 use assets::*;
 use consts::*;
 use enemy::*;
 use items::*;
+use particles::*;
 use player::*;
+use projectiles::*;
 
 struct Ramble<'a> {
     assets: &'a Assets,
@@ -32,8 +36,8 @@ async fn main() {
     player.pos.x = SCREEN_WIDTH / 2.0;
     player.pos.y = SCREEN_HEIGHT / 2.0;
     player.stats.speed = 1.5;
-    player.chestplate = Some(ITEMS[0]);
-    player.hand = Some(ITEMS[3]);
+    player.chestplate = Some(ITEMS[0].clone());
+    player.hand = Some(ITEMS[3].clone());
 
     let mut enemies: Vec<Enemy> = vec![Enemy {
         pos: Vec2::new(10.0, 10.0),
@@ -42,6 +46,7 @@ async fn main() {
         anim_frame: 0.0,
         move_target: None,
     }];
+    let mut projectiles: Vec<Projectile> = Vec::new();
 
     let render_target = render_target(SCREEN_WIDTH as u32, SCREEN_HEIGHT as u32);
     render_target.texture.set_filter(FilterMode::Nearest);
@@ -66,7 +71,7 @@ async fn main() {
         if now - last >= 1.0 / 60.0 {
             // update
             let move_vector = get_movement_vector();
-            player.pos += move_vector * player.stats.speed;
+            player.pos += move_vector * player.stats().speed;
             if move_vector != Vec2::ZERO {
                 player.moving = true;
                 player.anim_frame += player.stats.speed;
@@ -74,6 +79,31 @@ async fn main() {
                 player.moving = false;
             }
             last = now;
+            if player.attack_counter > 0.0 {
+                player.attack_counter -= 1.0
+            }
+
+            if is_mouse_button_down(MouseButton::Left)
+                && player.attack_counter <= 0.0
+                && let Some(held) = &player.hand
+                && let ItemType::Held(held) = &held.ty
+            {
+                let mut projectile = held.projectile.clone();
+                let delta = (Vec2::new(mouse_x, mouse_y) - player.pos).normalize();
+                projectile.pos = player.pos + delta * 10.0;
+                projectile.direction = delta;
+                // make projectile travel faster if player is moving in same direction they're shooting
+                projectile.speed *= 1.6_f32.powf(projectile.direction.dot(move_vector));
+                projectiles.push(projectile);
+                player.attack_counter = player.stats().attack_delay;
+            }
+
+            projectiles.retain_mut(|projectile| {
+                projectile.pos += projectile.direction * projectile.speed;
+                projectile.speed = projectile.speed.lerp(0.0, projectile.drag);
+                projectile.life += 1;
+                projectile.life < projectile.lifetime
+            });
 
             for enemy in enemies.iter_mut() {
                 match enemy.ty.movement {
@@ -108,6 +138,10 @@ async fn main() {
 
         // draws
         player.draw(&assets, mouse_x, mouse_y);
+
+        for projectile in projectiles.iter() {
+            projectile.draw(&assets);
+        }
 
         for enemy in enemies.iter() {
             enemy.draw(&assets);
