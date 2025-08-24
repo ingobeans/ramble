@@ -28,7 +28,7 @@ impl<'a> Ramble<'a> {
         player.pos.x = SCREEN_WIDTH / 2.0;
         player.pos.y = SCREEN_HEIGHT / 2.0;
         player.stats.speed = 1.5;
-        player.chestplate = Some(ITEMS[0].clone());
+        player.stats.roll_delay = 60.0;
         player.hand = Some(ITEMS[3].clone());
 
         Ramble {
@@ -67,8 +67,13 @@ impl<'a> Ramble<'a> {
             let now = get_time();
             if now - last >= 1.0 / 60.0 {
                 // update
-                let move_vector = get_movement_vector();
-                self.player.pos += move_vector * self.player.stats().speed;
+                let (move_vector, speed) = if self.player.roll.0 == 0 {
+                    (get_movement_vector(), self.player.stats().speed)
+                } else {
+                    (self.player.roll.1, 4.0)
+                };
+                self.player.pos += move_vector * speed;
+
                 if move_vector != Vec2::ZERO {
                     self.player.moving = true;
                     self.player.anim_frame += self.player.stats.speed;
@@ -78,6 +83,19 @@ impl<'a> Ramble<'a> {
                 last = now;
                 if self.player.attack_counter > 0.0 {
                     self.player.attack_counter -= 1.0
+                }
+                if self.player.roll_counter > 0.0 {
+                    self.player.roll_counter -= 1.0
+                }
+                if self.player.roll.0 > 0 {
+                    self.player.roll.0 -= 1;
+                }
+                if is_key_down(KeyCode::Space)
+                    && self.player.roll_counter <= 0.0
+                    && self.player.moving
+                {
+                    self.player.roll_counter = self.player.stats().roll_delay;
+                    self.player.roll = (12, move_vector)
                 }
 
                 if is_mouse_button_down(MouseButton::Left)

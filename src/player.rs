@@ -18,10 +18,7 @@ pub fn get_movement_vector() -> Vec2 {
     if is_key_down(KeyCode::S) {
         move_vector.y += 1.0
     }
-    if move_vector.x != 0.0 && move_vector.y != 0.0 {
-        move_vector = move_vector.normalize();
-    }
-    move_vector
+    move_vector.try_normalize().unwrap_or(Vec2::ZERO)
 }
 
 #[derive(Default, Clone, Copy)]
@@ -29,11 +26,13 @@ pub struct Stats {
     pub speed: f32,
     pub max_lives: u16,
     pub attack_delay: f32,
+    pub roll_delay: f32,
 }
 pub const DEFAULT_STATS: Stats = Stats {
     speed: 0.0,
     max_lives: 0,
     attack_delay: 0.0,
+    roll_delay: 0.0,
 };
 
 impl Stats {
@@ -41,6 +40,7 @@ impl Stats {
         self.speed += other.speed;
         self.max_lives += other.max_lives;
         self.attack_delay += other.attack_delay;
+        self.roll_delay += other.roll_delay;
     }
 }
 
@@ -56,6 +56,10 @@ pub struct Player {
     pub moving: bool,
     pub anim_frame: f32,
     pub attack_counter: f32,
+    pub roll_counter: f32,
+    /// Info about current roll. First value is roll frames, if zero, player is not rolling.
+    /// Second is roll direction.
+    pub roll: (u8, Vec2),
 }
 impl Player {
     pub fn stats(&self) -> Stats {
@@ -80,6 +84,15 @@ impl Player {
             flip_x: facing_left,
             ..Default::default()
         };
+
+        if self.roll.0 != 0 {
+            let anim = (self.roll.0 / 3) as f32 % 4.0;
+
+            assets
+                .entities
+                .draw_sprite(x, y, 2.0 + anim, 0.0, Some(&draw_params));
+            return;
+        }
         let anim = if self.moving {
             (self.anim_frame / 5.0).floor() % 2.0
         } else {
