@@ -34,7 +34,9 @@ fn load_ase_texture(bytes: &[u8], layer: Option<u32>) -> Texture2D {
         height: img.height() as u16,
         bytes: img.as_bytes().to_vec(),
     };
-    Texture2D::from_image(&new)
+    let texture = Texture2D::from_image(&new);
+    texture.set_filter(FilterMode::Nearest);
+    texture
 }
 
 pub struct Spritesheet {

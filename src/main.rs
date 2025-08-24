@@ -3,10 +3,12 @@ use macroquad::{miniquad::window::screen_size, prelude::*};
 mod assets;
 mod consts;
 mod enemy;
+mod items;
 mod player;
 use assets::*;
 use consts::*;
 use enemy::*;
+use items::*;
 use player::*;
 
 struct Ramble<'a> {
@@ -26,6 +28,13 @@ async fn main() {
 
     let assets = Assets::default();
     let mut player = Player::default();
+
+    player.pos.x = SCREEN_WIDTH / 2.0;
+    player.pos.y = SCREEN_HEIGHT / 2.0;
+    player.stats.speed = 1.5;
+    player.chestplate = Some(ITEMS[0]);
+    player.hand = Some(ITEMS[3]);
+
     let mut enemies: Vec<Enemy> = vec![Enemy {
         pos: Vec2::new(10.0, 10.0),
         ty: &ENEMY_TYPES[0],
@@ -33,10 +42,6 @@ async fn main() {
         anim_frame: 0.0,
         move_target: None,
     }];
-
-    player.pos.x = SCREEN_WIDTH / 2.0;
-    player.pos.y = SCREEN_HEIGHT / 2.0;
-    player.stats.speed = 1.5;
 
     let render_target = render_target(SCREEN_WIDTH as u32, SCREEN_HEIGHT as u32);
     render_target.texture.set_filter(FilterMode::Nearest);
@@ -51,8 +56,11 @@ async fn main() {
     loop {
         let (screen_width, screen_height) = screen_size();
         let scale_factor = (screen_width / SCREEN_WIDTH).min(screen_height / SCREEN_HEIGHT);
+        let (mouse_x, mouse_y) = mouse_position();
+        let (mouse_x, mouse_y) = (mouse_x / scale_factor, mouse_y / scale_factor);
+
         set_camera(&pixel_camera);
-        clear_background(WHITE);
+        clear_background(Color::from_hex(0x353658));
 
         let now = get_time();
         if now - last >= 1.0 / 60.0 {
@@ -64,11 +72,6 @@ async fn main() {
                 player.anim_frame += player.stats.speed;
             } else {
                 player.moving = false;
-            }
-            if move_vector.x < 0.0 {
-                player.facing_left = true;
-            } else if move_vector.x > 0.0 {
-                player.facing_left = false;
             }
             last = now;
 
@@ -104,7 +107,7 @@ async fn main() {
         }
 
         // draws
-        player.draw(&assets);
+        player.draw(&assets, mouse_x, mouse_y);
 
         for enemy in enemies.iter() {
             enemy.draw(&assets);
