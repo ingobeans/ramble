@@ -24,7 +24,7 @@ pub fn get_movement_vector() -> Vec2 {
 #[derive(Default)]
 pub struct Stats {
     pub speed: f32,
-    pub lives: u16,
+    pub max_lives: u16,
 }
 
 pub enum ItemType {
@@ -45,6 +45,7 @@ pub struct Item {
 #[derive(Default)]
 pub struct Player {
     pub pos: Vec2,
+    pub lives: u16,
     pub stats: Stats,
     pub helmet: Option<Item>,
     pub chestplate: Option<Item>,

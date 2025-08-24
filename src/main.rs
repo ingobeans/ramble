@@ -26,9 +26,10 @@ async fn main() {
     let mut player = Player::default();
     let mut enemies: Vec<Enemy> = vec![Enemy {
         pos: Vec2::new(10.0, 10.0),
-        ty: &ENEMY_TYPES[1],
+        ty: &ENEMY_TYPES[2],
         facing_left: false,
         anim_frame: 0.0,
+        move_target: None,
     }];
 
     player.pos.x = SCREEN_WIDTH / 2.0;
@@ -76,6 +77,24 @@ async fn main() {
                         enemy.pos += direction * enemy.ty.speed;
                         enemy.facing_left = direction.x < 0.0;
                         enemy.anim_frame += enemy.ty.speed;
+                    }
+                    EnemyMovement::Wander => {
+                        if let Some(move_target) = enemy.move_target {
+                            let delta = move_target - enemy.pos;
+                            let direction = delta.normalize();
+                            enemy.pos += direction * enemy.ty.speed;
+                            enemy.facing_left = direction.x < 0.0;
+                            enemy.anim_frame += enemy.ty.speed;
+                            if delta.length() > 4.0 {
+                                continue;
+                            }
+                        }
+                        // set new move target if either no previous move target was set,
+                        // or distance was less than 4.0
+                        enemy.move_target = Some(Vec2::new(
+                            rand::gen_range(0.0, SCREEN_WIDTH),
+                            rand::gen_range(0.0, SCREEN_HEIGHT),
+                        ));
                     }
                     _ => {}
                 }

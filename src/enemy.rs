@@ -24,6 +24,8 @@ pub struct Enemy {
     pub pos: Vec2,
     pub facing_left: bool,
     pub anim_frame: f32,
+    /// Used only for [EnemyMovement::Wander]
+    pub move_target: Option<Vec2>,
 }
 impl Enemy {
     pub fn draw(&self, assets: &Assets) {
