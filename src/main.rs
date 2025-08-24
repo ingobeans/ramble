@@ -2,8 +2,10 @@ use macroquad::{miniquad::window::screen_size, prelude::*};
 
 mod assets;
 mod consts;
+mod player;
 use assets::*;
 use consts::*;
+use player::*;
 
 struct Ramble<'a> {
     assets: &'a Assets,
@@ -24,7 +26,7 @@ async fn main() {
         let (screen_width, screen_height) = screen_size();
         let scale_factor = (screen_width / SCREEN_WIDTH).min(screen_height / SCREEN_HEIGHT);
         set_camera(&pixel_camera);
-        draw_texture(&assets.entities, 0.0, 0.0, WHITE);
+        assets.entities.draw_sprite(0.0, 0.0, 0.0, 1.0);
         set_default_camera();
         draw_texture_ex(
             &pixel_camera.render_target.as_ref().unwrap().texture,
