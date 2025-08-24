@@ -22,11 +22,13 @@ fn window_conf() -> Conf {
 }
 #[macroquad::main(window_conf)]
 async fn main() {
+    rand::srand(macroquad::miniquad::date::now() as _);
+
     let assets = Assets::default();
     let mut player = Player::default();
     let mut enemies: Vec<Enemy> = vec![Enemy {
         pos: Vec2::new(10.0, 10.0),
-        ty: &ENEMY_TYPES[2],
+        ty: &ENEMY_TYPES[0],
         facing_left: false,
         anim_frame: 0.0,
         move_target: None,

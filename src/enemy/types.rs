@@ -7,7 +7,7 @@ pub static ENEMY_TYPES: &[EnemyType] = &[
         sprite_y: 1.0,
         speed: 0.5,
         movement: EnemyMovement::Wander,
-        frames: 1,
+        frames: 2,
     },
     // bear
     EnemyType {
