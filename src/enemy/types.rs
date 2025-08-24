@@ -6,8 +6,9 @@ pub static ENEMY_TYPES: &[EnemyType] = &[
         sprite_x: 0.0,
         sprite_y: 1.0,
         speed: 0.5,
-        movement: EnemyMovement::Wander,
+        movement: EnemyMovement::Wander(true),
         frames: 2,
+        max_health: 5.0,
     },
     // bear
     EnemyType {
@@ -16,13 +17,15 @@ pub static ENEMY_TYPES: &[EnemyType] = &[
         speed: 1.0,
         movement: EnemyMovement::Chase,
         frames: 2,
+        max_health: 5.0,
     },
     // bird
     EnemyType {
         sprite_x: 0.0,
         sprite_y: 3.0,
         speed: 1.0,
-        movement: EnemyMovement::Wander,
+        movement: EnemyMovement::Wander(false),
         frames: 2,
+        max_health: 2.0,
     },
 ];

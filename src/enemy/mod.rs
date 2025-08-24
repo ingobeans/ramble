@@ -6,8 +6,11 @@ pub use types::*;
 use crate::assets::Assets;
 
 pub enum EnemyMovement {
+    /// Enemy chases player
     Chase,
-    Wander,
+    /// Enemy wanders randomly. Bool is whether it should face the player
+    Wander(bool),
+    /// Stands still
     Still,
 }
 
@@ -17,6 +20,7 @@ pub struct EnemyType {
     pub speed: f32,
     pub movement: EnemyMovement,
     pub frames: usize,
+    pub max_health: f32,
 }
 
 pub struct Enemy {
@@ -26,8 +30,19 @@ pub struct Enemy {
     pub anim_frame: f32,
     /// Used only for [EnemyMovement::Wander]
     pub move_target: Option<Vec2>,
+    pub health: f32,
 }
 impl Enemy {
+    pub fn new(ty: &'static EnemyType, pos: Vec2) -> Self {
+        Self {
+            ty,
+            pos,
+            facing_left: false,
+            anim_frame: 0.0,
+            move_target: None,
+            health: ty.max_health,
+        }
+    }
     pub fn draw(&self, assets: &Assets) {
         let x = self.pos.x.floor();
         let y = self.pos.y.floor();
