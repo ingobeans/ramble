@@ -1,18 +1,6 @@
 use crate::assets::Assets;
 use macroquad::prelude::*;
 
-pub enum ArmorType {
-    Helmet,
-    Chestplate,
-}
-
-pub struct Armor {
-    ty: ArmorType,
-    name: &'static str,
-    sprite_x: f32,
-    sprite_y: f32,
-    stats: Stats,
-}
 pub fn get_movement_vector() -> Vec2 {
     let mut move_vector = Vec2::new(0.0, 0.0);
     if is_key_down(KeyCode::A) {
@@ -39,15 +27,30 @@ pub struct Stats {
     pub lives: u16,
 }
 
+pub enum ItemType {
+    Helmet,
+    Chestplate,
+    MainHand,
+    OffHand,
+    Talisman,
+}
+
+pub struct Item {
+    name: &'static str,
+    ty: ItemType,
+    sprite_x: f32,
+    sprite_y: f32,
+}
+
 #[derive(Default)]
 pub struct Player {
     pub pos: Vec2,
     pub stats: Stats,
-    pub helmet: Option<Armor>,
-    pub chestplate: Option<Armor>,
+    pub helmet: Option<Item>,
+    pub chestplate: Option<Item>,
     pub facing_left: bool,
     pub moving: bool,
-    pub anim_frame: u32,
+    pub anim_frame: f32,
 }
 impl Player {
     pub fn draw(&self, assets: &Assets) {
@@ -58,7 +61,7 @@ impl Player {
             ..Default::default()
         };
         let anim = if self.moving {
-            (self.anim_frame as f32 * self.stats.speed / 5.0).floor() % 2.0
+            (self.anim_frame / 5.0).floor() % 2.0
         } else {
             0.0
         };

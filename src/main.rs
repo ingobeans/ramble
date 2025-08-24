@@ -2,9 +2,11 @@ use macroquad::{miniquad::window::screen_size, prelude::*};
 
 mod assets;
 mod consts;
+mod enemy;
 mod player;
 use assets::*;
 use consts::*;
+use enemy::*;
 use player::*;
 
 struct Ramble<'a> {
@@ -22,9 +24,16 @@ fn window_conf() -> Conf {
 async fn main() {
     let assets = Assets::default();
     let mut player = Player::default();
+    let mut enemies: Vec<Enemy> = vec![Enemy {
+        pos: Vec2::new(10.0, 10.0),
+        ty: &ENEMY_TYPES[1],
+        facing_left: false,
+        anim_frame: 0.0,
+    }];
+
     player.pos.x = SCREEN_WIDTH / 2.0;
     player.pos.y = SCREEN_HEIGHT / 2.0;
-    player.stats.speed = 1.0;
+    player.stats.speed = 1.5;
 
     let render_target = render_target(SCREEN_WIDTH as u32, SCREEN_HEIGHT as u32);
     render_target.texture.set_filter(FilterMode::Nearest);
@@ -49,7 +58,7 @@ async fn main() {
             player.pos += move_vector * player.stats.speed;
             if move_vector != Vec2::ZERO {
                 player.moving = true;
-                player.anim_frame += 1;
+                player.anim_frame += player.stats.speed;
             } else {
                 player.moving = false;
             }
@@ -59,10 +68,26 @@ async fn main() {
                 player.facing_left = false;
             }
             last = now;
+
+            for enemy in enemies.iter_mut() {
+                match enemy.ty.movement {
+                    EnemyMovement::Chase => {
+                        let direction = (player.pos - enemy.pos).normalize();
+                        enemy.pos += direction * enemy.ty.speed;
+                        enemy.facing_left = direction.x < 0.0;
+                        enemy.anim_frame += enemy.ty.speed;
+                    }
+                    _ => {}
+                }
+            }
         }
 
         // draws
         player.draw(&assets);
+
+        for enemy in enemies.iter() {
+            enemy.draw(&assets);
+        }
 
         // draw pixel camera to actual screen
         set_default_camera();
