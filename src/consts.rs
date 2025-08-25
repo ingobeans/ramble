@@ -9,6 +9,8 @@ use macroquad::{
 pub const SCREEN_WIDTH: f32 = 256.0;
 pub const SCREEN_HEIGHT: f32 = 144.0;
 
+pub const RIGHT: Vec2 = Vec2::new(1.0, 0.0);
+
 pub static WHITE_MATERIAL: LazyLock<Material> = LazyLock::new(|| {
     // to enable transparency!
     let pipeline = PipelineParams {

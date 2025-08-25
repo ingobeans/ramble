@@ -1,3 +1,5 @@
+use std::f32::consts::PI;
+
 use macroquad::{miniquad::window::screen_size, prelude::*};
 
 mod assets;
@@ -51,6 +53,8 @@ impl<'a> Ramble<'a> {
         let mut last = get_time();
         self.enemies
             .push(Enemy::new(&ENEMY_TYPES[0], Vec2::new(10.0, 10.0), 0));
+        self.enemies
+            .push(Enemy::new(&ENEMY_TYPES[1], Vec2::new(45.0, 10.0), 1));
         self.enemies
             .push(Enemy::new(&ENEMY_TYPES[2], Vec2::new(5.0, 20.0), 2));
 
@@ -153,9 +157,8 @@ impl<'a> Ramble<'a> {
                     // move
                     match enemy.ty.movement {
                         EnemyMovement::Chase => {
-                            let direction = player_delta.normalize();
-                            enemy.pos += direction * enemy.ty.speed;
-                            enemy.facing_left = direction.x < 0.0;
+                            enemy.direction = player_delta.normalize();
+                            enemy.pos += enemy.direction * enemy.ty.speed;
                             enemy.anim_frame += enemy.ty.speed;
                         }
                         EnemyMovement::Wander(face_player) => {
@@ -166,10 +169,9 @@ impl<'a> Ramble<'a> {
                                 let direction = delta.normalize();
                                 enemy.pos += direction * enemy.ty.speed;
                                 if face_player {
-                                    let player_dir = player_delta.normalize();
-                                    enemy.facing_left = player_dir.x < 0.0;
+                                    enemy.direction = player_delta.normalize();
                                 } else {
-                                    enemy.facing_left = direction.x < 0.0;
+                                    enemy.direction = direction;
                                 }
                                 enemy.anim_frame += enemy.ty.speed;
                                 if delta.length() <= 4.0 {
@@ -185,7 +187,9 @@ impl<'a> Ramble<'a> {
                                 ));
                             }
                         }
-                        _ => {}
+                        EnemyMovement::Still => {
+                            enemy.direction = RIGHT;
+                        }
                     }
                     // shoot
                     if enemy.attack_counter == 0 {
@@ -197,6 +201,18 @@ impl<'a> Ramble<'a> {
                                 projectile.direction = player_delta.normalize();
                                 projectile.player_owned = false;
                                 self.projectiles.push(projectile);
+                            }
+                            ProjectileFiring::Cardinally(projectile, delay) => {
+                                enemy.attack_counter = *delay;
+                                for i in 0..4 {
+                                    let angle = enemy.direction.to_angle() + i as f32 * PI / 2.0;
+                                    let direction = Vec2::from_angle(angle);
+                                    let mut projectile = projectile.clone();
+                                    projectile.pos = enemy.pos;
+                                    projectile.direction = direction;
+                                    projectile.player_owned = false;
+                                    self.projectiles.push(projectile);
+                                }
                             }
                             ProjectileFiring::None => {}
                         }

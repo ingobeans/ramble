@@ -1,3 +1,5 @@
+use std::f32::consts::PI;
+
 use macroquad::prelude::*;
 
 mod types;
@@ -16,6 +18,7 @@ pub enum EnemyMovement {
 
 pub enum ProjectileFiring {
     None,
+    Cardinally(Projectile, u8),
     TowardsPlayer(Projectile, u8),
 }
 
@@ -33,7 +36,7 @@ pub struct Enemy {
     pub ty: &'static EnemyType,
     pub id: usize,
     pub pos: Vec2,
-    pub facing_left: bool,
+    pub direction: Vec2,
     pub anim_frame: f32,
     /// Used only for [EnemyMovement::Wander]
     pub move_target: Option<Vec2>,
@@ -47,7 +50,7 @@ impl Enemy {
             ty,
             id,
             pos,
-            facing_left: false,
+            direction: RIGHT,
             anim_frame: 0.0,
             move_target: None,
             health: ty.max_health,
@@ -59,7 +62,7 @@ impl Enemy {
         let x = self.pos.x.floor();
         let y = self.pos.y.floor();
         let draw_params = DrawTextureParams {
-            flip_x: self.facing_left,
+            flip_x: self.direction.x < 0.0,
             ..Default::default()
         };
         if self.damage_frames > 0 {
