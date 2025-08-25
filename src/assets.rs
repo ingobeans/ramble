@@ -2,7 +2,10 @@ use asefile::AsepriteFile;
 use image::EncodableLayout;
 use macroquad::prelude::*;
 
+use crate::items::{Item, get_items};
+
 pub struct Assets {
+    pub all_items: Vec<Item>,
     pub entities: Spritesheet,
     pub items: Spritesheet,
     pub particles: Spritesheet,
@@ -23,6 +26,7 @@ impl Default for Assets {
                 load_ase_texture(include_bytes!("../assets/particles.ase"), None),
                 16.0,
             ),
+            all_items: get_items(),
         }
     }
 }

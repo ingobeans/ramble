@@ -56,6 +56,7 @@ pub struct Player {
     pub moving: bool,
     pub anim_frame: f32,
     pub attack_counter: f32,
+    pub invuln_frames: u8,
     pub roll_counter: f32,
     /// Info about current roll. First value is roll frames, if zero, player is not rolling.
     /// Second is roll direction.
@@ -73,6 +74,13 @@ impl Player {
             }
         }
         stats
+    }
+    pub fn can_take_damage(&self) -> bool {
+        self.roll.0 == 0 && self.invuln_frames == 0
+    }
+    pub fn damage(&mut self) {
+        self.invuln_frames = 240;
+        self.lives -= 1;
     }
     pub fn draw(&self, assets: &Assets, mouse_x: f32, mouse_y: f32) {
         let x = self.pos.x.floor();

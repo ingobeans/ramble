@@ -11,7 +11,6 @@ use assets::*;
 use consts::*;
 use enemy::*;
 use items::*;
-use particles::*;
 use player::*;
 use projectiles::*;
 
@@ -29,7 +28,9 @@ impl<'a> Ramble<'a> {
         player.pos.y = SCREEN_HEIGHT / 2.0;
         player.stats.speed = 1.5;
         player.stats.roll_delay = 60.0;
-        player.hand = Some(ITEMS[3].clone());
+        player.stats.max_lives = 3;
+        player.lives = 3;
+        player.hand = Some(assets.all_items[3].clone());
 
         Ramble {
             assets,
@@ -66,6 +67,7 @@ impl<'a> Ramble<'a> {
 
             let now = get_time();
             if now - last >= 1.0 / 60.0 {
+                last = now;
                 // update
                 let (move_vector, speed) = if self.player.roll.0 == 0 {
                     (get_movement_vector(), self.player.stats().speed)
@@ -80,7 +82,8 @@ impl<'a> Ramble<'a> {
                 } else {
                     self.player.moving = false;
                 }
-                last = now;
+
+                // tick counters
                 if self.player.attack_counter > 0.0 {
                     self.player.attack_counter -= 1.0
                 }
@@ -90,6 +93,11 @@ impl<'a> Ramble<'a> {
                 if self.player.roll.0 > 0 {
                     self.player.roll.0 -= 1;
                 }
+                if self.player.invuln_frames > 0 {
+                    self.player.invuln_frames -= 1;
+                }
+
+                // player combat roll
                 if is_key_down(KeyCode::Space)
                     && self.player.roll_counter <= 0.0
                     && self.player.moving
@@ -98,6 +106,7 @@ impl<'a> Ramble<'a> {
                     self.player.roll = (12, move_vector)
                 }
 
+                // player attack
                 if is_mouse_button_down(MouseButton::Left)
                     && self.player.attack_counter <= 0.0
                     && let Some(held) = &self.player.hand
@@ -107,6 +116,7 @@ impl<'a> Ramble<'a> {
                     let delta = (Vec2::new(mouse_x, mouse_y) - self.player.pos).normalize();
                     projectile.pos = self.player.pos + delta * 10.0;
                     projectile.direction = delta;
+                    projectile.player_owned = true;
                     // make projectile travel faster if self.player is moving in same direction they're shooting
                     projectile.speed *= 1.6_f32.powf(projectile.direction.dot(move_vector));
                     self.projectiles.push(projectile);
@@ -117,13 +127,28 @@ impl<'a> Ramble<'a> {
                     projectile.pos += projectile.direction * projectile.speed;
                     projectile.speed = projectile.speed.lerp(0.0, projectile.drag);
                     projectile.life += 1;
+                    // check for collisions
+                    if projectile.player_owned {
+                        for enemy in self.enemies.iter_mut() {
+                            if (enemy.pos - projectile.pos).length() < 4.0 {
+                                enemy.health -= 1.0;
+                            }
+                        }
+                    } else if self.player.can_take_damage() {
+                        let distance = (self.player.pos - projectile.pos).length();
+                        if distance <= 4.0 {
+                            self.player.damage();
+                        }
+                    }
+
                     projectile.life < projectile.lifetime
                 });
 
                 self.enemies.retain_mut(|enemy| {
+                    let player_delta = (self.player.pos - enemy.pos);
                     match enemy.ty.movement {
                         EnemyMovement::Chase => {
-                            let direction = (self.player.pos - enemy.pos).normalize();
+                            let direction = player_delta.normalize();
                             enemy.pos += direction * enemy.ty.speed;
                             enemy.facing_left = direction.x < 0.0;
                             enemy.anim_frame += enemy.ty.speed;
@@ -136,7 +161,7 @@ impl<'a> Ramble<'a> {
                                 let direction = delta.normalize();
                                 enemy.pos += direction * enemy.ty.speed;
                                 if face_player {
-                                    let player_dir = (self.player.pos - enemy.pos).normalize();
+                                    let player_dir = player_delta.normalize();
                                     enemy.facing_left = player_dir.x < 0.0;
                                 } else {
                                     enemy.facing_left = direction.x < 0.0;
@@ -157,6 +182,11 @@ impl<'a> Ramble<'a> {
                         }
                         _ => {}
                     }
+                    // dmg player
+                    if player_delta.length() <= 4.0 && self.player.can_take_damage() {
+                        self.player.damage();
+                    }
+
                     enemy.health > 0.0
                 });
             }

@@ -7,8 +7,13 @@ pub enum DrawType {
     Sprite(f32, f32),
     Particle(Particle),
 }
+impl Default for DrawType {
+    fn default() -> Self {
+        Self::Sprite(0.0, 0.0)
+    }
+}
 
-#[derive(Clone)]
+#[derive(Clone, Default)]
 pub struct Projectile {
     pub pos: Vec2,
     pub direction: Vec2,
@@ -16,6 +21,7 @@ pub struct Projectile {
     pub drag: f32,
     pub draw_type: DrawType,
     pub chain: Vec<Projectile>,
+    pub player_owned: bool,
     pub life: u16,
     pub lifetime: u16,
 }
@@ -40,18 +46,37 @@ impl Projectile {
                 };
                 particle(&ctx, assets);
             }
-            _ => {}
         }
     }
 }
-
-pub const SLASH: Projectile = Projectile {
+pub const BASE_PROJECTILE: Projectile = Projectile {
     pos: Vec2::ZERO,
     direction: Vec2::ZERO,
-    speed: 5.0,
-    drag: 0.15,
+    speed: 0.0,
+    drag: 0.0,
     draw_type: DrawType::Sprite(0.0, 0.0),
     chain: Vec::new(),
     life: 0,
-    lifetime: 20,
+    lifetime: 0,
+    player_owned: false,
 };
+
+pub fn slash() -> Projectile {
+    Projectile {
+        speed: 5.0,
+        drag: 0.15,
+        draw_type: DrawType::Sprite(0.0, 0.0),
+        lifetime: 20,
+        ..BASE_PROJECTILE
+    }
+}
+
+pub fn arrow() -> Projectile {
+    Projectile {
+        speed: 5.0,
+        drag: 0.15,
+        draw_type: DrawType::Sprite(0.0, 0.0),
+        lifetime: 20,
+        ..BASE_PROJECTILE
+    }
+}
