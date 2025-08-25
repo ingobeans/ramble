@@ -11,6 +11,11 @@ pub const SCREEN_HEIGHT: f32 = 144.0;
 
 pub const RIGHT: Vec2 = Vec2::new(1.0, 0.0);
 
+/// Select random entry from list. Panics if empty
+pub fn select_random<T>(items: &[T]) -> &T {
+    &items[rand::gen_range(0, items.len())]
+}
+
 pub static WHITE_MATERIAL: LazyLock<Material> = LazyLock::new(|| {
     // to enable transparency!
     let pipeline = PipelineParams {

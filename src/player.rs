@@ -2,9 +2,9 @@ use std::collections::HashMap;
 
 use crate::{
     assets::Assets,
-    consts::*,
     items::{Item, ItemType},
     projectiles::DamageType,
+    utils::*,
 };
 use macroquad::prelude::*;
 

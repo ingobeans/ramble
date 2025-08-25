@@ -3,24 +3,27 @@ use std::f32::consts::PI;
 use macroquad::{miniquad::window::screen_size, prelude::*};
 
 mod assets;
-mod consts;
+mod dungeon;
 mod enemy;
 mod items;
 mod particles;
 mod player;
 mod projectiles;
+mod utils;
 use assets::*;
-use consts::*;
+use dungeon::*;
 use enemy::*;
 use items::*;
 use player::*;
 use projectiles::*;
+use utils::*;
 
 struct Ramble<'a> {
     assets: &'a Assets,
     player: Player,
     enemies: Vec<Enemy>,
     projectiles: Vec<Projectile>,
+    dungeon_manager: DungeonManager,
 }
 impl<'a> Ramble<'a> {
     fn new(assets: &'a Assets) -> Self {
@@ -30,7 +33,7 @@ impl<'a> Ramble<'a> {
         player.pos.y = SCREEN_HEIGHT / 2.0;
         player.stats.speed = 1.5;
         player.stats.roll_delay = 60.0;
-        player.stats.max_lives = 6;
+        player.stats.max_lives = 3;
         player.lives = 3;
         player.hand = Some(assets.all_items[3].clone());
 
@@ -39,6 +42,10 @@ impl<'a> Ramble<'a> {
             player,
             enemies: Vec::new(),
             projectiles: Vec::new(),
+            dungeon_manager: DungeonManager {
+                world: &WORLD_FOREST,
+                room_index: 0,
+            },
         }
     }
     async fn run(&mut self) {
@@ -51,12 +58,8 @@ impl<'a> Ramble<'a> {
             ..Default::default()
         };
         let mut last = get_time();
-        self.enemies
-            .push(Enemy::new(&ENEMY_TYPES[0], Vec2::new(10.0, 10.0), 0));
-        self.enemies
-            .push(Enemy::new(&ENEMY_TYPES[1], Vec2::new(45.0, 10.0), 1));
-        self.enemies
-            .push(Enemy::new(&ENEMY_TYPES[2], Vec2::new(5.0, 20.0), 2));
+        self.enemies.append(&mut self.dungeon_manager.spawn_room());
+        let mut paused = false;
 
         loop {
             let (screen_width, screen_height) = screen_size();
@@ -68,7 +71,12 @@ impl<'a> Ramble<'a> {
             clear_background(Color::from_hex(0x353658));
 
             let now = get_time();
-            if now - last >= 1.0 / 60.0 {
+
+            if is_key_pressed(KeyCode::Escape) {
+                paused = !paused;
+            }
+
+            if !paused && now - last >= 1.0 / 60.0 {
                 last = now;
                 // update
                 let (move_vector, speed) = if self.player.roll.0 == 0 {
@@ -194,11 +202,11 @@ impl<'a> Ramble<'a> {
                     // shoot
                     if enemy.attack_counter == 0 {
                         match &enemy.ty.projectile_firing {
-                            ProjectileFiring::TowardsPlayer(projectile, delay) => {
+                            ProjectileFiring::Forwards(projectile, delay) => {
                                 enemy.attack_counter = *delay;
                                 let mut projectile = projectile.clone();
                                 projectile.pos = enemy.pos;
-                                projectile.direction = player_delta.normalize();
+                                projectile.direction = enemy.direction;
                                 projectile.player_owned = false;
                                 self.projectiles.push(projectile);
                             }
@@ -227,6 +235,12 @@ impl<'a> Ramble<'a> {
 
                     enemy.health > 0.0
                 });
+            }
+
+            // check whether round complete
+            if self.enemies.is_empty() {
+                self.dungeon_manager.room_index += 1;
+                self.enemies.append(&mut self.dungeon_manager.spawn_room());
             }
 
             // draws

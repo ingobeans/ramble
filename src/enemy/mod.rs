@@ -5,7 +5,7 @@ use macroquad::prelude::*;
 mod types;
 pub use types::*;
 
-use crate::{assets::Assets, consts::*, projectiles::Projectile};
+use crate::{assets::Assets, projectiles::Projectile, utils::*};
 
 pub enum EnemyMovement {
     /// Enemy chases player
@@ -19,7 +19,16 @@ pub enum EnemyMovement {
 pub enum ProjectileFiring {
     None,
     Cardinally(Projectile, u8),
-    TowardsPlayer(Projectile, u8),
+    Forwards(Projectile, u8),
+}
+
+#[expect(dead_code)]
+#[derive(PartialEq, Eq, Hash)]
+pub enum EnemyTier {
+    Light,
+    Ranged,
+    Heavy,
+    Extra,
 }
 
 pub struct EnemyType {
@@ -46,6 +55,11 @@ pub struct Enemy {
 }
 impl Enemy {
     pub fn new(ty: &'static EnemyType, pos: Vec2, id: usize) -> Self {
+        let firing_delay = match &ty.projectile_firing {
+            ProjectileFiring::None => 0,
+            ProjectileFiring::Cardinally(_, delay) => *delay,
+            ProjectileFiring::Forwards(_, delay) => *delay,
+        };
         Self {
             ty,
             id,
@@ -55,7 +69,7 @@ impl Enemy {
             move_target: None,
             health: ty.max_health,
             damage_frames: 0,
-            attack_counter: 0,
+            attack_counter: rand::gen_range(0, firing_delay),
         }
     }
     pub fn draw(&self, assets: &Assets) {

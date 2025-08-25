@@ -94,3 +94,12 @@ pub fn arrow() -> Projectile {
         ..BASE_PROJECTILE
     }
 }
+pub fn slow_arrow() -> Projectile {
+    Projectile {
+        speed: 3.0,
+        drag: 0.01,
+        draw_type: DrawType::Sprite(1.0, 0.0),
+        lifetime: 60,
+        ..BASE_PROJECTILE
+    }
+}
