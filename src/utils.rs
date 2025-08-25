@@ -9,6 +9,9 @@ use macroquad::{
 pub const SCREEN_WIDTH: f32 = 256.0;
 pub const SCREEN_HEIGHT: f32 = 144.0;
 
+pub const TILES_HEIGHT: u32 = SCREEN_HEIGHT as u32 / 16;
+pub const TILES_WIDTH: u32 = SCREEN_WIDTH as u32 / 16;
+
 pub const RIGHT: Vec2 = Vec2::new(1.0, 0.0);
 
 /// Select random entry from list. Panics if empty

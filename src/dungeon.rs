@@ -20,7 +20,6 @@ impl DungeonManager {
             EnemyTier::Heavy => select_random(&self.world.heavy),
             EnemyTier::Ranged =>  select_random(&self.world.ranged)
         );
-        let tiles_width = SCREEN_WIDTH as usize / 16;
 
         let layout_group_index = self.room_index / 2;
         let layout_group = &LAYOUTS[layout_group_index];
@@ -30,8 +29,8 @@ impl DungeonManager {
             let Some(value) = value else {
                 continue;
             };
-            let x = (index % tiles_width) as f32 * 16.0;
-            let y = (index / tiles_width) as f32 * 16.0;
+            let x = (index % TILES_WIDTH as usize) as f32 * 16.0;
+            let y = (index / TILES_WIDTH as usize) as f32 * 16.0;
             let ty = types[value];
             let enemy = Enemy::new(ty, Vec2::new(x, y), 0);
             enemies.push(enemy);
@@ -54,17 +53,16 @@ pub static LAYOUTS: LazyLock<[Vec<Layout>; 4]> = LazyLock::new(|| {
         include_bytes!("../assets/layouts/2.png"),
         include_bytes!("../assets/layouts/3.png"),
     ];
-    let tiles_height = SCREEN_HEIGHT as u32 / 16;
-    let tiles_width = SCREEN_WIDTH as u32 / 16;
+
     std::array::from_fn(|i| {
         let image = image::load_from_memory(layouts[i]).unwrap();
-        assert_eq!(image.width(), tiles_width);
-        assert!(image.height() % tiles_height == 0);
+        assert_eq!(image.width(), TILES_WIDTH);
+        assert!(image.height() % TILES_HEIGHT == 0);
         let mut vec = Vec::new();
-        for layout_index in 0..image.height() / tiles_height {
+        for layout_index in 0..image.height() / TILES_HEIGHT {
             vec.push(std::array::from_fn(|i| {
-                let y = i as u32 / tiles_width + layout_index * tiles_height;
-                let x = i as u32 % tiles_width;
+                let y = i as u32 / TILES_WIDTH + layout_index * TILES_HEIGHT;
+                let x = i as u32 % TILES_WIDTH;
                 let value = image.get_pixel(x, y);
                 match value {
                     Rgba([0, 0, 0, 255]) => None,

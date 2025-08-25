@@ -22,6 +22,7 @@ struct Ramble<'a> {
     assets: &'a Assets,
     player: Player,
     enemies: Vec<Enemy>,
+    enemy_id: usize,
     projectiles: Vec<Projectile>,
     dungeon_manager: DungeonManager,
 }
@@ -41,11 +42,19 @@ impl<'a> Ramble<'a> {
             assets,
             player,
             enemies: Vec::new(),
+            enemy_id: 0,
             projectiles: Vec::new(),
             dungeon_manager: DungeonManager {
                 world: &WORLD_FOREST,
                 room_index: 0,
             },
+        }
+    }
+    fn spawn_enemies(&mut self, buffer: &mut Vec<Enemy>) {
+        for mut enemy in buffer.drain(..) {
+            enemy.id = self.enemy_id;
+            self.enemy_id += 1;
+            self.enemies.push(enemy);
         }
     }
     async fn run(&mut self) {
@@ -58,7 +67,7 @@ impl<'a> Ramble<'a> {
             ..Default::default()
         };
         let mut last = get_time();
-        self.enemies.append(&mut self.dungeon_manager.spawn_room());
+        self.spawn_enemies(&mut self.dungeon_manager.spawn_room());
         let mut paused = false;
 
         loop {
@@ -69,6 +78,18 @@ impl<'a> Ramble<'a> {
 
             set_camera(&pixel_camera);
             clear_background(Color::from_hex(0x353658));
+            // draw background tiles
+            for y in 0..TILES_HEIGHT {
+                for x in 0..TILES_WIDTH {
+                    self.assets.world.draw_sprite(
+                        x as f32 * 16.0 + 8.0,
+                        y as f32 * 16.0 + 8.0,
+                        0.0,
+                        0.0,
+                        None,
+                    );
+                }
+            }
 
             let now = get_time();
 
@@ -240,7 +261,7 @@ impl<'a> Ramble<'a> {
             // check whether round complete
             if self.enemies.is_empty() {
                 self.dungeon_manager.room_index += 1;
-                self.enemies.append(&mut self.dungeon_manager.spawn_room());
+                self.spawn_enemies(&mut self.dungeon_manager.spawn_room());
             }
 
             // draws

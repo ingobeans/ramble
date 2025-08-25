@@ -10,6 +10,7 @@ pub struct Assets {
     pub items: Spritesheet,
     pub particles: Spritesheet,
     pub ui: Spritesheet,
+    pub world: Spritesheet,
 }
 
 impl Default for Assets {
@@ -29,6 +30,10 @@ impl Default for Assets {
             ),
             ui: Spritesheet::new(
                 load_ase_texture(include_bytes!("../assets/ui.ase"), None),
+                16.0,
+            ),
+            world: Spritesheet::new(
+                load_ase_texture(include_bytes!("../assets/world.ase"), None),
                 16.0,
             ),
             all_items: get_items(),
