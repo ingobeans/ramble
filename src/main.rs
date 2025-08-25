@@ -50,11 +50,9 @@ impl<'a> Ramble<'a> {
         };
         let mut last = get_time();
         self.enemies
-            .push(Enemy::new(&ENEMY_TYPES[0], Vec2::new(10.0, 10.0)));
+            .push(Enemy::new(&ENEMY_TYPES[0], Vec2::new(10.0, 10.0), 0));
         self.enemies
-            .push(Enemy::new(&ENEMY_TYPES[1], Vec2::new(40.0, 10.0)));
-        self.enemies
-            .push(Enemy::new(&ENEMY_TYPES[2], Vec2::new(5.0, 20.0)));
+            .push(Enemy::new(&ENEMY_TYPES[2], Vec2::new(5.0, 20.0), 2));
 
         loop {
             let (screen_width, screen_height) = screen_size();
@@ -90,12 +88,8 @@ impl<'a> Ramble<'a> {
                 if self.player.roll_counter > 0.0 {
                     self.player.roll_counter -= 1.0
                 }
-                if self.player.roll.0 > 0 {
-                    self.player.roll.0 -= 1;
-                }
-                if self.player.invuln_frames > 0 {
-                    self.player.invuln_frames -= 1;
-                }
+                self.player.roll.0 = self.player.roll.0.saturating_sub(1);
+                self.player.invuln_frames = self.player.invuln_frames.saturating_sub(1);
 
                 // player combat roll
                 if is_key_down(KeyCode::Space)
@@ -133,10 +127,14 @@ impl<'a> Ramble<'a> {
                         && let Some(stats) = &projectile.stats
                     {
                         for enemy in self.enemies.iter_mut() {
-                            if (enemy.pos - projectile.pos).length() <= 8.0 {
+                            if !projectile.hit_enemies.contains(&enemy.id)
+                                && (enemy.pos - projectile.pos).length() <= 8.0
+                            {
                                 for (_, amt) in &stats.damage {
                                     enemy.health -= amt;
                                 }
+                                enemy.damage_frames = 5;
+                                projectile.hit_enemies.push(enemy.id);
                             }
                         }
                     } else if self.player.can_take_damage() {
@@ -150,7 +148,8 @@ impl<'a> Ramble<'a> {
                 });
 
                 self.enemies.retain_mut(|enemy| {
-                    let player_delta = (self.player.pos - enemy.pos);
+                    let player_delta = self.player.pos - enemy.pos;
+                    enemy.damage_frames = enemy.damage_frames.saturating_sub(1);
                     match enemy.ty.movement {
                         EnemyMovement::Chase => {
                             let direction = player_delta.normalize();

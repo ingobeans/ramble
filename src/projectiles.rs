@@ -34,6 +34,7 @@ pub struct Projectile {
     pub player_owned: bool,
     pub life: u16,
     pub lifetime: u16,
+    pub hit_enemies: Vec<usize>,
     pub stats: Option<Stats>,
 }
 impl Projectile {
@@ -71,6 +72,7 @@ pub const BASE_PROJECTILE: Projectile = Projectile {
     lifetime: 0,
     stats: None,
     player_owned: false,
+    hit_enemies: Vec::new(),
 };
 
 pub fn slash() -> Projectile {

@@ -3,7 +3,7 @@ use macroquad::prelude::*;
 mod types;
 pub use types::*;
 
-use crate::assets::Assets;
+use crate::{assets::Assets, consts::*};
 
 pub enum EnemyMovement {
     /// Enemy chases player
@@ -25,6 +25,7 @@ pub struct EnemyType {
 
 pub struct Enemy {
     pub ty: &'static EnemyType,
+    pub id: usize,
     pub pos: Vec2,
     pub facing_left: bool,
     pub anim_frame: f32,
@@ -34,9 +35,10 @@ pub struct Enemy {
     pub damage_frames: u8,
 }
 impl Enemy {
-    pub fn new(ty: &'static EnemyType, pos: Vec2) -> Self {
+    pub fn new(ty: &'static EnemyType, pos: Vec2, id: usize) -> Self {
         Self {
             ty,
+            id,
             pos,
             facing_left: false,
             anim_frame: 0.0,
@@ -52,6 +54,9 @@ impl Enemy {
             flip_x: self.facing_left,
             ..Default::default()
         };
+        if self.damage_frames > 0 {
+            gl_use_material(&WHITE_MATERIAL);
+        }
         let anim = (self.anim_frame / 3.0).floor() % self.ty.frames as f32;
         assets.entities.draw_sprite(
             x,
@@ -60,6 +65,7 @@ impl Enemy {
             self.ty.sprite_y,
             Some(&draw_params),
         );
+        gl_use_default_material();
         // draw health bar
         let width = 12.0;
         let start_x = x - 8.0 + (16.0 - width) / 2.0;
