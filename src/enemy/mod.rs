@@ -3,7 +3,7 @@ use macroquad::prelude::*;
 mod types;
 pub use types::*;
 
-use crate::{assets::Assets, consts::*};
+use crate::{assets::Assets, consts::*, projectiles::Projectile};
 
 pub enum EnemyMovement {
     /// Enemy chases player
@@ -14,11 +14,17 @@ pub enum EnemyMovement {
     Still,
 }
 
+pub enum ProjectileFiring {
+    None,
+    TowardsPlayer(Projectile, u8),
+}
+
 pub struct EnemyType {
     pub sprite_x: f32,
     pub sprite_y: f32,
     pub speed: f32,
     pub movement: EnemyMovement,
+    pub projectile_firing: ProjectileFiring,
     pub frames: usize,
     pub max_health: f32,
 }
@@ -33,6 +39,7 @@ pub struct Enemy {
     pub move_target: Option<Vec2>,
     pub health: f32,
     pub damage_frames: u8,
+    pub attack_counter: u8,
 }
 impl Enemy {
     pub fn new(ty: &'static EnemyType, pos: Vec2, id: usize) -> Self {
@@ -45,6 +52,7 @@ impl Enemy {
             move_target: None,
             health: ty.max_health,
             damage_frames: 0,
+            attack_counter: 0,
         }
     }
     pub fn draw(&self, assets: &Assets) {

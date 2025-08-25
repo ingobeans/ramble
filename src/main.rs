@@ -150,6 +150,7 @@ impl<'a> Ramble<'a> {
                 self.enemies.retain_mut(|enemy| {
                     let player_delta = self.player.pos - enemy.pos;
                     enemy.damage_frames = enemy.damage_frames.saturating_sub(1);
+                    // move
                     match enemy.ty.movement {
                         EnemyMovement::Chase => {
                             let direction = player_delta.normalize();
@@ -186,7 +187,24 @@ impl<'a> Ramble<'a> {
                         }
                         _ => {}
                     }
-                    // dmg player
+                    // shoot
+                    if enemy.attack_counter == 0 {
+                        match &enemy.ty.projectile_firing {
+                            ProjectileFiring::TowardsPlayer(projectile, delay) => {
+                                enemy.attack_counter = *delay;
+                                let mut projectile = projectile.clone();
+                                projectile.pos = enemy.pos;
+                                projectile.direction = player_delta.normalize();
+                                projectile.player_owned = false;
+                                self.projectiles.push(projectile);
+                            }
+                            ProjectileFiring::None => {}
+                        }
+                    } else {
+                        enemy.attack_counter -= 1
+                    }
+
+                    // dmg player on contact
                     if player_delta.length() <= 4.0 && self.player.can_take_damage() {
                         self.player.damage();
                     }
