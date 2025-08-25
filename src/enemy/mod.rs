@@ -31,6 +31,7 @@ pub struct Enemy {
     /// Used only for [EnemyMovement::Wander]
     pub move_target: Option<Vec2>,
     pub health: f32,
+    pub damage_frames: u8,
 }
 impl Enemy {
     pub fn new(ty: &'static EnemyType, pos: Vec2) -> Self {
@@ -41,6 +42,7 @@ impl Enemy {
             anim_frame: 0.0,
             move_target: None,
             health: ty.max_health,
+            damage_frames: 0,
         }
     }
     pub fn draw(&self, assets: &Assets) {

@@ -117,8 +117,9 @@ impl<'a> Ramble<'a> {
                     projectile.pos = self.player.pos + delta * 10.0;
                     projectile.direction = delta;
                     projectile.player_owned = true;
+                    projectile.stats = Some(held.stats.clone());
                     // make projectile travel faster if self.player is moving in same direction they're shooting
-                    projectile.speed *= 1.6_f32.powf(projectile.direction.dot(move_vector));
+                    projectile.speed += 4.0 * (projectile.direction.dot(move_vector).max(0.0));
                     self.projectiles.push(projectile);
                     self.player.attack_counter = self.player.stats().attack_delay;
                 }
@@ -128,10 +129,14 @@ impl<'a> Ramble<'a> {
                     projectile.speed = projectile.speed.lerp(0.0, projectile.drag);
                     projectile.life += 1;
                     // check for collisions
-                    if projectile.player_owned {
+                    if projectile.player_owned
+                        && let Some(stats) = &projectile.stats
+                    {
                         for enemy in self.enemies.iter_mut() {
                             if (enemy.pos - projectile.pos).length() < 4.0 {
-                                enemy.health -= 1.0;
+                                for (_, amt) in &stats.damage {
+                                    enemy.health -= amt;
+                                }
                             }
                         }
                     } else if self.player.can_take_damage() {

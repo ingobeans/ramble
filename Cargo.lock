@@ -216,6 +216,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "hashmap_macro"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e8a181d5ff5b742b5a830beb8c172562e6f22dccba6e1308bbacaba9fda84c8d"
+
+[[package]]
 name = "image"
 version = "0.24.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -371,9 +377,10 @@ checksum = "5a651516ddc9168ebd67b24afd085a718be02f8858fe406591b013d101ce2f40"
 
 [[package]]
 name = "ramble"
-version = "0.1.11"
+version = "0.1.12"
 dependencies = [
  "asefile",
+ "hashmap_macro",
  "image",
  "macroquad",
 ]

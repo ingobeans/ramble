@@ -1,6 +1,9 @@
+use std::collections::HashMap;
+
 use crate::{
     assets::Assets,
     items::{Item, ItemType},
+    projectiles::DamageType,
 };
 use macroquad::prelude::*;
 
@@ -21,20 +24,14 @@ pub fn get_movement_vector() -> Vec2 {
     move_vector.try_normalize().unwrap_or(Vec2::ZERO)
 }
 
-#[derive(Default, Clone, Copy)]
+#[derive(Default, Clone)]
 pub struct Stats {
     pub speed: f32,
     pub max_lives: u16,
     pub attack_delay: f32,
     pub roll_delay: f32,
+    pub damage: HashMap<DamageType, f32>,
 }
-pub const DEFAULT_STATS: Stats = Stats {
-    speed: 0.0,
-    max_lives: 0,
-    attack_delay: 0.0,
-    roll_delay: 0.0,
-};
-
 impl Stats {
     pub fn merge(&mut self, other: &Stats) {
         self.speed += other.speed;
@@ -64,7 +61,7 @@ pub struct Player {
 }
 impl Player {
     pub fn stats(&self) -> Stats {
-        let mut stats = self.stats;
+        let mut stats = self.stats.clone();
         for item in [&self.helmet, &self.chestplate, &self.hand, &self.offhand] {
             if let Some(item) = item {
                 stats.merge(&item.stats);
@@ -139,7 +136,7 @@ impl Player {
             let offset = delta.normalize() * 12.0;
             assets.items.draw_sprite(
                 x + offset.x,
-                y + offset.y + 4.0,
+                y + offset.y + 2.0,
                 held.sprite_x,
                 held.sprite_y,
                 Some(&draw_params),

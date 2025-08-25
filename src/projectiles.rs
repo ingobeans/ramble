@@ -1,6 +1,16 @@
 use macroquad::prelude::*;
 
-use crate::{assets::Assets, particles::*};
+use crate::{assets::Assets, particles::*, player::Stats};
+
+#[derive(Clone, Copy, PartialEq, Eq, Hash)]
+pub enum DamageType {
+    Slashing,
+    Piercing,
+    Fire,
+    Ice,
+    Unholy,
+    Holy,
+}
 
 #[derive(Clone, Copy)]
 pub enum DrawType {
@@ -24,6 +34,7 @@ pub struct Projectile {
     pub player_owned: bool,
     pub life: u16,
     pub lifetime: u16,
+    pub stats: Option<Stats>,
 }
 impl Projectile {
     pub fn draw(&self, assets: &Assets) {
@@ -58,6 +69,7 @@ pub const BASE_PROJECTILE: Projectile = Projectile {
     chain: Vec::new(),
     life: 0,
     lifetime: 0,
+    stats: None,
     player_owned: false,
 };
 
@@ -73,9 +85,9 @@ pub fn slash() -> Projectile {
 
 pub fn arrow() -> Projectile {
     Projectile {
-        speed: 5.0,
-        drag: 0.15,
-        draw_type: DrawType::Sprite(0.0, 0.0),
+        speed: 7.0,
+        drag: 0.03,
+        draw_type: DrawType::Sprite(1.0, 0.0),
         lifetime: 20,
         ..BASE_PROJECTILE
     }
