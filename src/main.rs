@@ -133,7 +133,7 @@ impl<'a> Ramble<'a> {
                         && let Some(stats) = &projectile.stats
                     {
                         for enemy in self.enemies.iter_mut() {
-                            if (enemy.pos - projectile.pos).length() < 4.0 {
+                            if (enemy.pos - projectile.pos).length() <= 8.0 {
                                 for (_, amt) in &stats.damage {
                                     enemy.health -= amt;
                                 }
