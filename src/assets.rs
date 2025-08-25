@@ -9,6 +9,7 @@ pub struct Assets {
     pub entities: Spritesheet,
     pub items: Spritesheet,
     pub particles: Spritesheet,
+    pub ui: Spritesheet,
 }
 
 impl Default for Assets {
@@ -24,6 +25,10 @@ impl Default for Assets {
             ),
             particles: Spritesheet::new(
                 load_ase_texture(include_bytes!("../assets/particles.ase"), None),
+                16.0,
+            ),
+            ui: Spritesheet::new(
+                load_ase_texture(include_bytes!("../assets/ui.ase"), None),
                 16.0,
             ),
             all_items: get_items(),

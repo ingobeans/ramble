@@ -28,7 +28,7 @@ impl<'a> Ramble<'a> {
         player.pos.y = SCREEN_HEIGHT / 2.0;
         player.stats.speed = 1.5;
         player.stats.roll_delay = 60.0;
-        player.stats.max_lives = 3;
+        player.stats.max_lives = 6;
         player.lives = 3;
         player.hand = Some(assets.all_items[3].clone());
 
@@ -204,6 +204,19 @@ impl<'a> Ramble<'a> {
 
             for projectile in self.projectiles.iter() {
                 projectile.draw(self.assets);
+            }
+
+            // draw ui
+            let max = self.player.stats().max_lives;
+            for i in 0..max {
+                let sprite = if i < self.player.lives { 0.0 } else { 1.0 };
+                self.assets.ui.draw_sprite(
+                    SCREEN_WIDTH / 2.0 - 8.0 * max as f32 + i as f32 * 16.0 + 8.0,
+                    SCREEN_HEIGHT - 8.0,
+                    sprite,
+                    0.0,
+                    None,
+                );
             }
 
             // draw pixel camera to actual screen

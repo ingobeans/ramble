@@ -2,6 +2,7 @@ use std::collections::HashMap;
 
 use crate::{
     assets::Assets,
+    consts::*,
     items::{Item, ItemType},
     projectiles::DamageType,
 };
@@ -76,8 +77,11 @@ impl Player {
         self.roll.0 == 0 && self.invuln_frames == 0
     }
     pub fn damage(&mut self) {
-        self.invuln_frames = 240;
+        self.invuln_frames = 100;
         self.lives -= 1;
+        if self.lives == 0 {
+            todo!("game over!");
+        }
     }
     pub fn draw(&self, assets: &Assets, mouse_x: f32, mouse_y: f32) {
         let x = self.pos.x.floor();
@@ -90,39 +94,50 @@ impl Player {
             ..Default::default()
         };
 
+        // make player flash white
+        if self.invuln_frames != 0 && (self.invuln_frames as f32 / 10.0).floor() % 2.0 == 1.0 {
+            gl_use_material(&WHITE_MATERIAL);
+        }
+
         if self.roll.0 != 0 {
             let anim = (self.roll.0 / 3) as f32 % 4.0;
 
             assets
                 .entities
                 .draw_sprite(x, y, 2.0 + anim, 0.0, Some(&draw_params));
-            return;
-        }
-        let anim = if self.moving {
-            (self.anim_frame / 5.0).floor() % 2.0
         } else {
-            0.0
-        };
-
-        assets
-            .entities
-            .draw_sprite(x, y, anim, 0.0, Some(&draw_params));
-
-        // draw armor
-        if let Some(chestplate) = &self.chestplate {
-            assets.items.draw_sprite(
-                x,
-                y,
-                chestplate.sprite_x,
-                chestplate.sprite_y,
-                Some(&draw_params),
-            );
-        }
-        if let Some(helmet) = &self.helmet {
+            let anim = if self.moving {
+                (self.anim_frame / 5.0).floor() % 2.0
+            } else {
+                0.0
+            };
             assets
-                .items
-                .draw_sprite(x, y, helmet.sprite_x, helmet.sprite_y, Some(&draw_params));
+                .entities
+                .draw_sprite(x, y, anim, 0.0, Some(&draw_params));
+
+            // draw armor
+            if let Some(chestplate) = &self.chestplate {
+                assets.items.draw_sprite(
+                    x,
+                    y,
+                    chestplate.sprite_x,
+                    chestplate.sprite_y,
+                    Some(&draw_params),
+                );
+            }
+            if let Some(helmet) = &self.helmet {
+                assets.items.draw_sprite(
+                    x,
+                    y,
+                    helmet.sprite_x,
+                    helmet.sprite_y,
+                    Some(&draw_params),
+                );
+            }
         }
+
+        gl_use_default_material();
+
         // draw held item
         if let Some(held) = &self.hand {
             let delta = Vec2::new(mouse_x, mouse_y) - self.pos;
