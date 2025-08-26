@@ -1,4 +1,5 @@
 use asefile::AsepriteFile;
+use hashmap_macro::hashmap;
 use image::EncodableLayout;
 use macroquad::prelude::*;
 
@@ -11,8 +12,8 @@ pub struct Assets {
     pub particles: Spritesheet,
     pub ui: Spritesheet,
     pub world: Spritesheet,
+    font: Spritesheet,
 }
-
 impl Default for Assets {
     fn default() -> Self {
         Self {
@@ -36,7 +37,41 @@ impl Default for Assets {
                 load_ase_texture(include_bytes!("../assets/world.ase"), None),
                 16.0,
             ),
+            font: Spritesheet::new(
+                load_ase_texture(include_bytes!("../assets/font.ase"), None),
+                4.0,
+            ),
             all_items: get_items(),
+        }
+    }
+}
+impl Assets {
+    pub fn draw_text(&self, text: &str, mut x: f32, mut y: f32) {
+        let original_x = x;
+        let hardcoded = hashmap!(':'=>36,'.'=>37,'-'=>38,'%'=>39,'+'=>40);
+
+        for char in text.chars() {
+            if char == '\n' {
+                y += 5.0;
+                x = original_x;
+                continue;
+            } else if char == ' ' {
+                x += 4.0;
+                continue;
+            }
+            let code = char as u8;
+            let index = if let Some(value) = hardcoded.get(&char) {
+                *value
+            } else if code >= 'a' as u8 && code <= 'z' as u8 {
+                code - 'a' as u8
+            } else if code >= '0' as u8 && code <= '9' as u8 {
+                code - '0' as u8 + 26
+            } else {
+                continue;
+            };
+            self.font.draw_sprite(x, y, index as f32, 0.0, None);
+
+            x += 4.0
         }
     }
 }
