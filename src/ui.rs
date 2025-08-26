@@ -84,6 +84,20 @@ impl UiManager {
                 assets.items.draw_sprite(sx + 6.0, sy + 6.0, 0.0, 2.0, None);
             }
 
+            // talismans
+            for (index, slot) in player.talismans.iter_mut().enumerate() {
+                let sx = x + width - 2.0 - 12.0;
+                let sy = y + 2.0 + (12.0 + 1.0) * index as f32;
+                draw_ui_rect(sx, sy, 12.0, 12.0);
+                let is_none = slot.is_none();
+                if draw_slot(slot.as_ref(), sx, sy, mouse_x, mouse_y, assets) {
+                    hovered = Some(slot)
+                }
+                if is_none {
+                    assets.items.draw_sprite(sx + 6.0, sy + 6.0, 0.0, 3.0, None);
+                }
+            }
+
             // inventory
             for (index, slot) in player.inventory.iter_mut().enumerate() {
                 let sx = x + 2.0 + (12.0 + 2.0) * index as f32;

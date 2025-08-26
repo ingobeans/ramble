@@ -74,6 +74,7 @@ pub struct Player {
     pub pos: Vec2,
     stats: Stats,
     pub inventory: Vec<Option<Item>>,
+    pub talismans: Vec<Option<Item>>,
     pub helmet: Option<Item>,
     pub chestplate: Option<Item>,
     pub hand: Option<Item>,
@@ -91,6 +92,7 @@ impl Player {
         Self {
             pos,
             inventory: vec![None; INV_SLOTS],
+            talismans: vec![None; 3],
             stats: Stats {
                 max_lives: 3,
                 lives: 3,
@@ -112,7 +114,10 @@ impl Player {
     pub fn stats(&self) -> Stats {
         let mut stats = self.stats.clone();
 
-        for item in [&self.helmet, &self.chestplate, &self.hand].into_iter().flatten() {
+        for item in [&self.helmet, &self.chestplate, &self.hand]
+            .into_iter()
+            .flatten()
+        {
             stats.merge(&item.stats);
             if let ItemType::Held(held) = &item.ty {
                 stats.merge(&held.stats);
@@ -129,10 +134,11 @@ impl Player {
         // find where to take heart
         for item in [&mut self.helmet, &mut self.chestplate, &mut self.hand] {
             if let Some(item) = item
-                && item.stats.lives > 0 {
-                    item.stats.lives -= 1;
-                    return;
-                }
+                && item.stats.lives > 0
+            {
+                item.stats.lives -= 1;
+                return;
+            }
         }
 
         self.stats.lives -= 1;
