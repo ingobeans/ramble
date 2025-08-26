@@ -10,6 +10,12 @@ pub fn get_items() -> Vec<Item> {
         Item {
             name: "iron chestplate",
             ty: ItemType::Chestplate,
+            stats: Stats {
+                max_lives: 1,
+                lives: 1,
+                speed_mod: -0.1,
+                ..Default::default()
+            },
             sprite_x: 0.0,
             sprite_y: 0.0,
             ..Default::default()
@@ -17,6 +23,11 @@ pub fn get_items() -> Vec<Item> {
         Item {
             name: "iron helmet",
             ty: ItemType::Helmet,
+            stats: Stats {
+                max_lives: 1,
+                lives: 1,
+                ..Default::default()
+            },
             sprite_x: 0.0,
             sprite_y: 1.0,
             ..Default::default()

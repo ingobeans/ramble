@@ -34,13 +34,15 @@ pub struct Stats {
     pub roll_delay: f32,
     pub roll_delay_mod: f32,
     pub max_lives: u16,
+    pub lives: u16,
     pub damage: HashMap<DamageType, f32>,
     pub damage_modifiers: HashMap<DamageType, f32>,
 }
 impl Stats {
     pub fn merge(&mut self, other: &Stats) {
-        self.speed_mod += other.speed_mod;
         self.max_lives += other.max_lives;
+        self.lives += other.lives;
+        self.speed_mod += other.speed_mod;
         self.attack_delay_mod += other.attack_delay_mod;
         self.attack_delay += other.attack_delay;
         self.roll_delay_mod += other.roll_delay_mod;
@@ -70,7 +72,6 @@ impl Stats {
 #[derive(Default)]
 pub struct Player {
     pub pos: Vec2,
-    pub lives: u16,
     stats: Stats,
     pub helmet: Option<Item>,
     pub chestplate: Option<Item>,
@@ -89,9 +90,9 @@ impl Player {
     pub fn new(pos: Vec2) -> Self {
         Self {
             pos,
-            lives: 3,
             stats: Stats {
                 max_lives: 3,
+                lives: 3,
                 speed: 1.5,
                 roll_delay: 60.0,
                 ..Default::default()
@@ -118,8 +119,23 @@ impl Player {
     }
     pub fn damage(&mut self) {
         self.invuln_frames = 100;
-        self.lives -= 1;
-        if self.lives == 0 {
+        // find where to take heart
+        for item in [
+            &mut self.helmet,
+            &mut self.chestplate,
+            &mut self.hand,
+            &mut self.offhand,
+        ] {
+            if let Some(item) = item {
+                if item.stats.lives > 0 {
+                    item.stats.lives -= 1;
+                    return;
+                }
+            }
+        }
+
+        self.stats.lives -= 1;
+        if self.stats.lives == 0 {
             todo!("game over!");
         }
     }

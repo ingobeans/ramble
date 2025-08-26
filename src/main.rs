@@ -32,6 +32,7 @@ impl<'a> Ramble<'a> {
     fn new(assets: &'a Assets) -> Self {
         let mut player = Player::new(Vec2::new(SCREEN_WIDTH / 2.0, SCREEN_HEIGHT - 16.0));
         player.hand = Some(assets.all_items[4].clone());
+        player.helmet = Some(assets.all_items[0].clone());
 
         Ramble {
             assets,
@@ -278,7 +279,11 @@ impl<'a> Ramble<'a> {
             // draw ui
             let max = self.player.stats().max_lives;
             for i in 0..max {
-                let sprite = if i < self.player.lives { 0.0 } else { 1.0 };
+                let sprite = if i < self.player.stats().lives {
+                    0.0
+                } else {
+                    1.0
+                };
                 self.assets.ui.draw_sprite(
                     SCREEN_WIDTH / 2.0 - 8.0 * max as f32 + i as f32 * 16.0 + 8.0,
                     SCREEN_HEIGHT - 8.0,
