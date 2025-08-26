@@ -19,6 +19,16 @@ pub static WORLD_FOREST: LazyLock<World> = LazyLock::new(|| {
                 frames: 2,
                 max_health: 2.0,
             },
+            // mini hood
+            EnemyType {
+                sprite_x: 0.0,
+                sprite_y: 4.0,
+                speed: 0.5,
+                movement: EnemyMovement::Chase,
+                projectile_firing: ProjectileFiring::None,
+                frames: 2,
+                max_health: 2.0,
+            },
         ],
         heavy: vec![
             // bear
@@ -26,6 +36,16 @@ pub static WORLD_FOREST: LazyLock<World> = LazyLock::new(|| {
                 sprite_x: 0.0,
                 sprite_y: 2.0,
                 speed: 1.0,
+                movement: EnemyMovement::Chase,
+                projectile_firing: ProjectileFiring::None,
+                frames: 2,
+                max_health: 5.0,
+            },
+            // goblin knife
+            EnemyType {
+                sprite_x: 4.0,
+                sprite_y: 2.0,
+                speed: 0.5,
                 movement: EnemyMovement::Chase,
                 projectile_firing: ProjectileFiring::None,
                 frames: 2,

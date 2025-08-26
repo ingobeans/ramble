@@ -94,7 +94,7 @@ impl Enemy {
         // draw health bar
         let width = 12.0;
         let start_x = x - 8.0 + (16.0 - width) / 2.0;
-        let start_y = y - 8.0;
+        let start_y = y - 12.0;
         draw_rectangle(start_x, start_y, width, 3.0, Color::from_hex(0x180d2f));
         draw_rectangle(
             start_x,

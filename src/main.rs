@@ -31,7 +31,7 @@ impl<'a> Ramble<'a> {
         let mut player = Player::default();
 
         player.pos.x = SCREEN_WIDTH / 2.0;
-        player.pos.y = SCREEN_HEIGHT / 2.0;
+        player.pos.y = SCREEN_HEIGHT - 16.0;
         player.stats.speed = 1.5;
         player.stats.roll_delay = 60.0;
         player.stats.max_lives = 3;

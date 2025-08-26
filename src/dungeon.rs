@@ -15,22 +15,31 @@ pub struct DungeonManager {
 }
 impl DungeonManager {
     pub fn spawn_room(&self) -> Vec<Enemy> {
-        let types = hashmap!(
+        let mut types: std::collections::HashMap<EnemyTier, &EnemyType> = hashmap!(
             EnemyTier::Light => select_random(&self.world.light),
             EnemyTier::Heavy => select_random(&self.world.heavy),
             EnemyTier::Ranged =>  select_random(&self.world.ranged)
         );
 
-        let layout_group_index = self.room_index / 2;
+        let layout_group_index = self.room_index.min(5);
         let layout_group = &LAYOUTS[layout_group_index];
         let layout = &layout_group[rand::gen_range(0, layout_group.len())];
         let mut enemies = Vec::new();
+        let mut last_row = -1.0;
         for (index, value) in layout.iter().enumerate() {
             let Some(value) = value else {
                 continue;
             };
             let x = (index % TILES_WIDTH as usize) as f32 * 16.0;
             let y = (index / TILES_WIDTH as usize) as f32 * 16.0;
+            if y != last_row {
+                types = hashmap!(
+                    EnemyTier::Light => select_random(&self.world.light),
+                    EnemyTier::Heavy => select_random(&self.world.heavy),
+                    EnemyTier::Ranged =>  select_random(&self.world.ranged)
+                );
+            }
+            last_row = y;
             let ty = types[value];
             let enemy = Enemy::new(ty, Vec2::new(x, y), 0);
             enemies.push(enemy);
@@ -46,12 +55,14 @@ pub struct World {
     pub other: Vec<EnemyType>,
 }
 
-pub static LAYOUTS: LazyLock<[Vec<Layout>; 4]> = LazyLock::new(|| {
-    let layouts: [&[u8]; 4] = [
+pub static LAYOUTS: LazyLock<[Vec<Layout>; 6]> = LazyLock::new(|| {
+    let layouts: [&[u8]; 6] = [
         include_bytes!("../assets/layouts/0.png"),
         include_bytes!("../assets/layouts/1.png"),
         include_bytes!("../assets/layouts/2.png"),
         include_bytes!("../assets/layouts/3.png"),
+        include_bytes!("../assets/layouts/4.png"),
+        include_bytes!("../assets/layouts/5.png"),
     ];
 
     std::array::from_fn(|i| {
