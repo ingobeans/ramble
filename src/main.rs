@@ -10,6 +10,7 @@ mod particles;
 mod player;
 mod projectiles;
 mod utils;
+mod worlds;
 use assets::*;
 use dungeon::*;
 use enemy::*;
@@ -17,6 +18,7 @@ use items::*;
 use player::*;
 use projectiles::*;
 use utils::*;
+use worlds::*;
 
 struct Ramble<'a> {
     assets: &'a Assets,
@@ -28,14 +30,7 @@ struct Ramble<'a> {
 }
 impl<'a> Ramble<'a> {
     fn new(assets: &'a Assets) -> Self {
-        let mut player = Player::default();
-
-        player.pos.x = SCREEN_WIDTH / 2.0;
-        player.pos.y = SCREEN_HEIGHT - 16.0;
-        player.stats.speed = 1.5;
-        player.stats.roll_delay = 60.0;
-        player.stats.max_lives = 3;
-        player.lives = 3;
+        let mut player = Player::new(Vec2::new(SCREEN_WIDTH / 2.0, SCREEN_HEIGHT - 16.0));
         player.hand = Some(assets.all_items[3].clone());
 
         Ramble {
@@ -109,7 +104,7 @@ impl<'a> Ramble<'a> {
 
                 if move_vector != Vec2::ZERO {
                     self.player.moving = true;
-                    self.player.anim_frame += self.player.stats.speed;
+                    self.player.anim_frame += self.player.stats().speed;
                 } else {
                     self.player.moving = false;
                 }

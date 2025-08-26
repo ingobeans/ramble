@@ -2,9 +2,6 @@ use std::f32::consts::PI;
 
 use macroquad::prelude::*;
 
-mod types;
-pub use types::*;
-
 use crate::{assets::Assets, projectiles::Projectile, utils::*};
 
 pub enum EnemyMovement {

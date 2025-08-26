@@ -46,7 +46,7 @@ impl Stats {
 pub struct Player {
     pub pos: Vec2,
     pub lives: u16,
-    pub stats: Stats,
+    stats: Stats,
     pub helmet: Option<Item>,
     pub chestplate: Option<Item>,
     pub hand: Option<Item>,
@@ -61,6 +61,19 @@ pub struct Player {
     pub roll: (u8, Vec2),
 }
 impl Player {
+    pub fn new(pos: Vec2) -> Self {
+        Self {
+            pos,
+            lives: 3,
+            stats: Stats {
+                max_lives: 3,
+                speed: 1.5,
+                roll_delay: 60.0,
+                ..Default::default()
+            },
+            ..Default::default()
+        }
+    }
     pub fn stats(&self) -> Stats {
         let mut stats = self.stats.clone();
         for item in [&self.helmet, &self.chestplate, &self.hand, &self.offhand] {
