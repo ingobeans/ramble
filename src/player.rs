@@ -102,6 +102,14 @@ impl Player {
             ..Default::default()
         }
     }
+    pub fn inv_slot_free(&self) -> bool {
+        for slot in self.inventory.iter() {
+            if slot.is_none() {
+                return true;
+            }
+        }
+        false
+    }
     pub fn stats(&self) -> Stats {
         let mut stats = self.stats.clone();
 

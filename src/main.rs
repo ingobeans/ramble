@@ -18,7 +18,7 @@ use enemy::*;
 use items::*;
 use player::*;
 use projectiles::*;
-use ui::*;
+use ui::UiManager;
 use utils::*;
 use worlds::*;
 
@@ -26,6 +26,7 @@ struct Ramble<'a> {
     assets: &'a Assets,
     player: Player,
     enemies: Vec<Enemy>,
+    dropped_items: Vec<(Vec2, Item)>,
     enemy_id: usize,
     projectiles: Vec<Projectile>,
     dungeon_manager: DungeonManager,
@@ -42,6 +43,7 @@ impl<'a> Ramble<'a> {
             assets,
             player,
             enemies: Vec::new(),
+            dropped_items: Vec::new(),
             enemy_id: 0,
             projectiles: Vec::new(),
             dungeon_manager: DungeonManager {
@@ -269,6 +271,29 @@ impl<'a> Ramble<'a> {
                 enemy.draw(self.assets);
             }
 
+            let mut item_under_player: Option<(usize, f32)> = None;
+
+            for (index, (pos, item)) in self.dropped_items.iter().enumerate() {
+                ui::draw_slot(Some(item), pos.x - 6.0, pos.y - 6.0, 0.0, 0.0, self.assets);
+
+                let dist = pos.distance(self.player.pos);
+                if dist <= 7.0 && item_under_player.is_none_or(|f| f.1 > dist) {
+                    item_under_player = Some((index, dist));
+                }
+            }
+            if let Some(item_under_player) = item_under_player {
+                ui::draw_tooltip("press e to pick up", self.assets);
+                if is_key_pressed(KeyCode::E) && self.player.inv_slot_free() {
+                    let item = self.dropped_items.remove(item_under_player.0).1;
+                    for slot in self.player.inventory.iter_mut() {
+                        if slot.is_none() {
+                            *slot = Some(item);
+                            break;
+                        }
+                    }
+                }
+            }
+
             self.player.draw(self.assets, mouse_x, mouse_y);
 
             for projectile in self.projectiles.iter() {
@@ -291,7 +316,14 @@ impl<'a> Ramble<'a> {
                     None,
                 );
             }
-            self.ui_manager.update(self.assets, &mut self.player);
+            if let Some(dropped) =
+                self.ui_manager
+                    .update(self.assets, &mut self.player, mouse_x, mouse_y)
+            {
+                let mut pos = self.player.pos;
+                pos += (Vec2::new(mouse_x, mouse_y) - self.player.pos).normalize() * 3.0;
+                self.dropped_items.push((pos, dropped));
+            }
 
             // draw pixel camera to actual screen
             set_default_camera();

@@ -1,61 +1,109 @@
 use macroquad::prelude::*;
 
-use crate::{assets::Assets, player::Player, utils::*};
+use crate::{assets::Assets, items::Item, player::Player, utils::*};
 
 #[derive(Default)]
 pub struct UiManager {
     pub inv_open: bool,
+    pub cursor_item: Option<Item>,
 }
 
 impl UiManager {
-    pub fn update(&mut self, assets: &Assets, player: &mut Player) {
+    #[must_use]
+    /// Update and draw UI. Returns if any item should be dropped.
+    pub fn update(
+        &mut self,
+        assets: &Assets,
+        player: &mut Player,
+        mouse_x: f32,
+        mouse_y: f32,
+    ) -> Option<Item> {
         if is_key_pressed(KeyCode::Escape) {
             self.inv_open = !self.inv_open;
         }
 
         if self.inv_open {
-            let width = 140.0;
+            let width = INV_SLOTS as f32 * 14.0 + 2.0;
             let height = 64.0;
             let x = (SCREEN_WIDTH - width) / 2.0;
             let y = (SCREEN_HEIGHT - height) / 2.0;
             draw_ui_rect(x, y, width, height);
             draw_ui_rect(x + 2.0, y + 2.0, 25.0, 25.0);
             player.draw_character(x + 2.0 + 12.0, y + 2.0 + 12.0, assets, 0.0, None);
+            let mut hovered = None;
+
+            let sx = x + 2.0 + 25.0 + 2.0;
+            let mut sy = y + 2.0;
             // helmet
-            draw_ui_rect(x + 2.0 + 25.0 + 2.0, y + 2.0, 12.0, 12.0);
-            if let Some(item) = &player.helmet {
-                assets.items.draw_sprite(
-                    x + 2.0 + 25.0 + 2.0 + 6.0,
-                    y + 2.0 + 6.0,
-                    item.sprite_x,
-                    item.sprite_y,
-                    None,
-                );
+            if draw_slot(player.helmet.as_ref(), sx, sy, mouse_x, mouse_y, assets) {
+                hovered = Some(&mut player.helmet);
             }
+
             // chestplate
-            draw_ui_rect(x + 2.0 + 25.0 + 2.0, y + 2.0 + 12.0 + 1.0, 12.0, 12.0);
-            if let Some(item) = &player.chestplate {
-                assets.items.draw_sprite(
-                    x + 2.0 + 25.0 + 2.0 + 6.0,
-                    y + 2.0 + 12.0 + 6.0 + 1.0,
-                    item.sprite_x,
-                    item.sprite_y,
-                    None,
-                );
+            sy += 12.0 + 1.0;
+            if draw_slot(player.chestplate.as_ref(), sx, sy, mouse_x, mouse_y, assets) {
+                hovered = Some(&mut player.chestplate)
             }
             // inventory
-            for (index, slot) in player.inventory.iter().enumerate() {
-                let slot_x = x + 2.0 + (12.0 + 2.0) * index as f32;
-                let slot_y = y + height - 2.0 - 12.0;
-                draw_ui_rect(slot_x, slot_y, 12.0, 12.0);
-                if let Some(item) = slot {
-                    assets
-                        .items
-                        .draw_sprite(slot_x, slot_y, item.sprite_x, item.sprite_y, None);
+            for (index, slot) in player.inventory.iter_mut().enumerate() {
+                let sx = x + 2.0 + (12.0 + 2.0) * index as f32;
+                let sy = y + height - 2.0 - 12.0;
+                draw_ui_rect(sx, sy, 12.0, 12.0);
+                if draw_slot(slot.as_ref(), sx, sy, mouse_x, mouse_y, assets) {
+                    hovered = Some(slot)
+                }
+            }
+            if self.cursor_item.is_some() {
+                draw_slot(
+                    self.cursor_item.as_ref(),
+                    mouse_x - 6.0,
+                    mouse_y - 6.0,
+                    0.0,
+                    0.0,
+                    assets,
+                );
+            }
+            if is_mouse_button_pressed(MouseButton::Left) {
+                // if a slot is hovered, replace it with the cursor item
+                if let Some(hovered) = hovered {
+                    std::mem::swap(&mut self.cursor_item, hovered);
+                } else if (!(x..x + width).contains(&mouse_x)
+                    || !(y..y + height).contains(&mouse_y))
+                    && let Some(cursor_item) = self.cursor_item.take()
+                {
+                    // if cursor is outside inventory, and the cursor item isnt None, drop it.
+                    return Some(cursor_item);
                 }
             }
         }
+        None
     }
+}
+
+pub fn draw_tooltip(text: &str, assets: &Assets) {
+    let width = text.chars().count() as f32 * 4.0 + 4.0;
+    let y = SCREEN_HEIGHT - 32.0;
+    let x = (SCREEN_WIDTH - width) / 2.0;
+    draw_ui_rect(x, y, width, 8.0);
+    assets.draw_text(text, x + 4.0, y + 4.0);
+}
+
+pub fn draw_slot(
+    item: Option<&Item>,
+    x: f32,
+    y: f32,
+    mouse_x: f32,
+    mouse_y: f32,
+    assets: &Assets,
+) -> bool {
+    draw_ui_rect(x, y, 12.0, 12.0);
+    let hovered = (x..x + 12.0).contains(&mouse_x) && (y..y + 12.0).contains(&mouse_y);
+    if let Some(item) = item {
+        assets
+            .items
+            .draw_sprite(x + 6.0, y + 6.0, item.sprite_x, item.sprite_y, None);
+    }
+    hovered
 }
 
 fn draw_ui_rect(x: f32, y: f32, w: f32, h: f32) {
