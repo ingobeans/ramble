@@ -61,7 +61,15 @@ pub static WORLD_FOREST: LazyLock<World> = LazyLock::new(|| {
             frames: 2,
             max_health: 5.0,
         }],
-        other: vec![],
+        other: vec![EnemyType {
+            sprite_x: 2.0,
+            sprite_y: 2.0,
+            speed: 0.0,
+            movement: EnemyMovement::Chase,
+            projectile_firing: ProjectileFiring::Forwards(projectiles::fireball(), 60),
+            frames: 1,
+            max_health: 5.0,
+        }],
         // archer
     }
 });

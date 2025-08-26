@@ -84,7 +84,14 @@ pub fn slash() -> Projectile {
         ..BASE_PROJECTILE
     }
 }
-
+pub fn fireball() -> Projectile {
+    Projectile {
+        speed: 2.0,
+        draw_type: DrawType::Sprite(2.0, 0.0),
+        lifetime: 70,
+        ..BASE_PROJECTILE
+    }
+}
 pub fn arrow() -> Projectile {
     Projectile {
         speed: 7.0,

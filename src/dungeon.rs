@@ -30,8 +30,8 @@ impl DungeonManager {
             let Some(value) = value else {
                 continue;
             };
-            let x = (index % TILES_WIDTH as usize) as f32 * 16.0;
-            let y = (index / TILES_WIDTH as usize) as f32 * 16.0;
+            let x = (index % TILES_WIDTH as usize) as f32 * 16.0 + 8.0;
+            let y = (index / TILES_WIDTH as usize) as f32 * 16.0 + 8.0;
             if y != last_row {
                 types = hashmap!(
                     EnemyTier::Light => select_random(&self.world.light),
@@ -44,6 +44,18 @@ impl DungeonManager {
             let enemy = Enemy::new(ty, Vec2::new(x, y), 0);
             enemies.push(enemy);
         }
+        if !self.world.other.is_empty() {
+            if rand::gen_range(0, 100) < OTHER_CHANCE {
+                // spawn an "other" in top left and right corners
+                let ty = select_random(&self.world.other);
+                let positions = [Vec2::new(8.0, 8.0), Vec2::new(SCREEN_WIDTH - 8.0, 8.0)];
+                for position in positions {
+                    let enemy = Enemy::new(ty, position, 0);
+                    enemies.push(enemy);
+                }
+            }
+        }
+
         enemies
     }
 }
