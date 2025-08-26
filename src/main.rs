@@ -35,7 +35,7 @@ struct Ramble<'a> {
 impl<'a> Ramble<'a> {
     fn new(assets: &'a Assets) -> Self {
         let mut player = Player::new(Vec2::new(SCREEN_WIDTH / 2.0, SCREEN_HEIGHT - 16.0));
-        player.hand = Some(assets.all_items[4].clone());
+        player.hand = Some(assets.all_items[3].clone());
         player.helmet = Some(assets.all_items[1].clone());
         player.chestplate = Some(assets.all_items[0].clone());
 

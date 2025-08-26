@@ -45,7 +45,7 @@ impl UiManager {
                 if self
                     .cursor_item
                     .as_ref()
-                    .is_none_or(|f| f.ty == ItemType::Helmet)
+                    .is_none_or(|f| matches!(f.ty, ItemType::Helmet))
                 {
                     hovered = Some(&mut player.helmet);
                 }
@@ -61,13 +61,30 @@ impl UiManager {
                 if self
                     .cursor_item
                     .as_ref()
-                    .is_none_or(|f| f.ty == ItemType::Chestplate)
+                    .is_none_or(|f| matches!(f.ty, ItemType::Chestplate))
                 {
                     hovered = Some(&mut player.chestplate)
                 }
             }
             if chestplate_is_none {
                 assets.items.draw_sprite(sx + 6.0, sy + 6.0, 0.0, 0.0, None);
+            }
+
+            // hand
+            let hand_is_none = player.hand.is_none();
+            let sx = x + 2.0;
+            let sy = y + 25.0 + 3.0;
+            if draw_slot(player.hand.as_ref(), sx, sy, mouse_x, mouse_y, assets) {
+                if self
+                    .cursor_item
+                    .as_ref()
+                    .is_none_or(|f| matches!(f.ty, ItemType::Held(_)))
+                {
+                    hovered = Some(&mut player.hand)
+                }
+            }
+            if hand_is_none {
+                assets.items.draw_sprite(sx + 6.0, sy + 6.0, 0.0, 2.0, None);
             }
 
             // inventory

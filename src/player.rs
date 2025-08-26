@@ -77,7 +77,6 @@ pub struct Player {
     pub helmet: Option<Item>,
     pub chestplate: Option<Item>,
     pub hand: Option<Item>,
-    pub offhand: Option<Item>,
     pub moving: bool,
     pub anim_frame: f32,
     pub attack_counter: f32,
@@ -113,7 +112,7 @@ impl Player {
     pub fn stats(&self) -> Stats {
         let mut stats = self.stats.clone();
 
-        for item in [&self.helmet, &self.chestplate, &self.hand, &self.offhand] {
+        for item in [&self.helmet, &self.chestplate, &self.hand] {
             if let Some(item) = item {
                 stats.merge(&item.stats);
                 if let ItemType::Held(held) = &item.ty {
@@ -130,12 +129,7 @@ impl Player {
     pub fn damage(&mut self) {
         self.invuln_frames = 100;
         // find where to take heart
-        for item in [
-            &mut self.helmet,
-            &mut self.chestplate,
-            &mut self.hand,
-            &mut self.offhand,
-        ] {
+        for item in [&mut self.helmet, &mut self.chestplate, &mut self.hand] {
             if let Some(item) = item {
                 if item.stats.lives > 0 {
                     item.stats.lives -= 1;
