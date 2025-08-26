@@ -9,6 +9,7 @@ mod items;
 mod particles;
 mod player;
 mod projectiles;
+mod ui;
 mod utils;
 mod worlds;
 use assets::*;
@@ -17,6 +18,7 @@ use enemy::*;
 use items::*;
 use player::*;
 use projectiles::*;
+use ui::*;
 use utils::*;
 use worlds::*;
 
@@ -27,12 +29,14 @@ struct Ramble<'a> {
     enemy_id: usize,
     projectiles: Vec<Projectile>,
     dungeon_manager: DungeonManager,
+    ui_manager: UiManager,
 }
 impl<'a> Ramble<'a> {
     fn new(assets: &'a Assets) -> Self {
         let mut player = Player::new(Vec2::new(SCREEN_WIDTH / 2.0, SCREEN_HEIGHT - 16.0));
         player.hand = Some(assets.all_items[4].clone());
-        player.helmet = Some(assets.all_items[0].clone());
+        player.helmet = Some(assets.all_items[1].clone());
+        player.chestplate = Some(assets.all_items[0].clone());
 
         Ramble {
             assets,
@@ -44,6 +48,7 @@ impl<'a> Ramble<'a> {
                 world: &WORLD_FOREST,
                 room_index: 0,
             },
+            ui_manager: UiManager::default(),
         }
     }
     fn spawn_enemies(&mut self, buffer: &mut Vec<Enemy>) {
@@ -64,7 +69,6 @@ impl<'a> Ramble<'a> {
         };
         let mut last = get_time();
         self.spawn_enemies(&mut self.dungeon_manager.spawn_room());
-        let mut paused = false;
 
         loop {
             let (screen_width, screen_height) = screen_size();
@@ -89,11 +93,7 @@ impl<'a> Ramble<'a> {
 
             let now = get_time();
 
-            if is_key_pressed(KeyCode::Escape) {
-                paused = !paused;
-            }
-
-            if !paused && now - last >= 1.0 / 60.0 {
+            if !self.ui_manager.inv_open && now - last >= 1.0 / 60.0 {
                 last = now;
                 // update
                 let (move_vector, speed) = if self.player.roll.0 == 0 {
@@ -125,7 +125,7 @@ impl<'a> Ramble<'a> {
                     && self.player.roll_counter <= 0.0
                     && self.player.moving
                 {
-                    self.player.roll_counter = self.player.stats().roll_delay_mod;
+                    self.player.roll_counter = self.player.stats().roll_delay;
                     self.player.roll = (12, move_vector)
                 }
 
@@ -145,8 +145,7 @@ impl<'a> Ramble<'a> {
                     projectile.speed += 4.0 * (projectile.direction.dot(move_vector).max(0.0));
                     self.projectiles.push(projectile);
                     let stats = self.player.stats();
-                    self.player.attack_counter =
-                        stats.attack_delay * (1.0 + stats.attack_delay_mod);
+                    self.player.attack_counter = stats.attack_delay;
                 }
 
                 self.projectiles.retain_mut(|projectile| {
@@ -292,6 +291,7 @@ impl<'a> Ramble<'a> {
                     None,
                 );
             }
+            self.ui_manager.update(self.assets, &mut self.player);
 
             // draw pixel camera to actual screen
             set_default_camera();

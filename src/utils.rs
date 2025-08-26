@@ -14,6 +14,8 @@ pub const TILES_WIDTH: u32 = SCREEN_WIDTH as u32 / 16;
 
 pub const OTHER_CHANCE: u8 = 20;
 
+pub const INV_SLOTS: usize = 9;
+
 pub const RIGHT: Vec2 = Vec2::new(1.0, 0.0);
 
 /// Select random entry from list. Panics if empty

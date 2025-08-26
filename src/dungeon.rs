@@ -21,7 +21,7 @@ impl DungeonManager {
             EnemyTier::Ranged =>  select_random(&self.world.ranged)
         );
 
-        let layout_group_index = self.room_index.min(5);
+        let layout_group_index = self.room_index.min(7);
         let layout_group = &LAYOUTS[layout_group_index];
         let layout = &layout_group[rand::gen_range(0, layout_group.len())];
         let mut enemies = Vec::new();
@@ -67,14 +67,16 @@ pub struct World {
     pub other: Vec<EnemyType>,
 }
 
-pub static LAYOUTS: LazyLock<[Vec<Layout>; 6]> = LazyLock::new(|| {
-    let layouts: [&[u8]; 6] = [
+pub static LAYOUTS: LazyLock<[Vec<Layout>; 8]> = LazyLock::new(|| {
+    let layouts: [&[u8]; _] = [
         include_bytes!("../assets/layouts/0.png"),
         include_bytes!("../assets/layouts/1.png"),
         include_bytes!("../assets/layouts/2.png"),
         include_bytes!("../assets/layouts/3.png"),
         include_bytes!("../assets/layouts/4.png"),
         include_bytes!("../assets/layouts/5.png"),
+        include_bytes!("../assets/layouts/6.png"),
+        include_bytes!("../assets/layouts/7.png"),
     ];
 
     std::array::from_fn(|i| {

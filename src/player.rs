@@ -73,6 +73,7 @@ impl Stats {
 pub struct Player {
     pub pos: Vec2,
     stats: Stats,
+    pub inventory: Vec<Option<Item>>,
     pub helmet: Option<Item>,
     pub chestplate: Option<Item>,
     pub hand: Option<Item>,
@@ -90,6 +91,7 @@ impl Player {
     pub fn new(pos: Vec2) -> Self {
         Self {
             pos,
+            inventory: vec![None; INV_SLOTS],
             stats: Stats {
                 max_lives: 3,
                 lives: 3,
@@ -139,6 +141,28 @@ impl Player {
             todo!("game over!");
         }
     }
+    pub fn draw_character(
+        &self,
+        x: f32,
+        y: f32,
+        assets: &Assets,
+        anim: f32,
+        draw_params: Option<&DrawTextureParams>,
+    ) {
+        assets.entities.draw_sprite(x, y, anim, 0.0, draw_params);
+
+        // draw armor
+        if let Some(chestplate) = &self.chestplate {
+            assets
+                .items
+                .draw_sprite(x, y, chestplate.sprite_x, chestplate.sprite_y, draw_params);
+        }
+        if let Some(helmet) = &self.helmet {
+            assets
+                .items
+                .draw_sprite(x, y, helmet.sprite_x, helmet.sprite_y, draw_params);
+        }
+    }
     pub fn draw(&self, assets: &Assets, mouse_x: f32, mouse_y: f32) {
         let x = self.pos.x.floor();
         let y = self.pos.y.floor();
@@ -167,29 +191,7 @@ impl Player {
             } else {
                 0.0
             };
-            assets
-                .entities
-                .draw_sprite(x, y, anim, 0.0, Some(&draw_params));
-
-            // draw armor
-            if let Some(chestplate) = &self.chestplate {
-                assets.items.draw_sprite(
-                    x,
-                    y,
-                    chestplate.sprite_x,
-                    chestplate.sprite_y,
-                    Some(&draw_params),
-                );
-            }
-            if let Some(helmet) = &self.helmet {
-                assets.items.draw_sprite(
-                    x,
-                    y,
-                    helmet.sprite_x,
-                    helmet.sprite_y,
-                    Some(&draw_params),
-                );
-            }
+            self.draw_character(self.pos.x, self.pos.y, assets, anim, Some(&draw_params));
         }
 
         gl_use_default_material();
