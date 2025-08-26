@@ -62,10 +62,10 @@ impl Assets {
             let code = char as u8;
             let index = if let Some(value) = hardcoded.get(&char) {
                 *value
-            } else if code >= 'a' as u8 && code <= 'z' as u8 {
-                code - 'a' as u8
-            } else if code >= '0' as u8 && code <= '9' as u8 {
-                code - '0' as u8 + 26
+            } else if code.is_ascii_lowercase() {
+                code - b'a'
+            } else if code.is_ascii_digit() {
+                code - b'0' + 26
             } else {
                 continue;
             };

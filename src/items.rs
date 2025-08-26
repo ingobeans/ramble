@@ -18,7 +18,7 @@ pub struct Weapon {
 pub enum ItemType {
     Helmet,
     Chestplate,
-    Held(Weapon),
+    Held(Box<Weapon>),
     Talisman,
 }
 impl PartialEq for ItemType {

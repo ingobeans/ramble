@@ -41,14 +41,13 @@ impl UiManager {
             let mut sy = y + 2.0;
             // helmet
             let helmet_is_none = player.helmet.is_none();
-            if draw_slot(player.helmet.as_ref(), sx, sy, mouse_x, mouse_y, assets) {
-                if self
+            if draw_slot(player.helmet.as_ref(), sx, sy, mouse_x, mouse_y, assets)
+                && self
                     .cursor_item
                     .as_ref()
                     .is_none_or(|f| matches!(f.ty, ItemType::Helmet))
-                {
-                    hovered = Some(&mut player.helmet);
-                }
+            {
+                hovered = Some(&mut player.helmet);
             }
             if helmet_is_none {
                 assets.items.draw_sprite(sx + 6.0, sy + 6.0, 0.0, 1.0, None);
@@ -57,14 +56,13 @@ impl UiManager {
             // chestplate
             let chestplate_is_none = player.chestplate.is_none();
             sy += 12.0 + 1.0;
-            if draw_slot(player.chestplate.as_ref(), sx, sy, mouse_x, mouse_y, assets) {
-                if self
+            if draw_slot(player.chestplate.as_ref(), sx, sy, mouse_x, mouse_y, assets)
+                && self
                     .cursor_item
                     .as_ref()
                     .is_none_or(|f| matches!(f.ty, ItemType::Chestplate))
-                {
-                    hovered = Some(&mut player.chestplate)
-                }
+            {
+                hovered = Some(&mut player.chestplate)
             }
             if chestplate_is_none {
                 assets.items.draw_sprite(sx + 6.0, sy + 6.0, 0.0, 0.0, None);
@@ -74,14 +72,13 @@ impl UiManager {
             let hand_is_none = player.hand.is_none();
             let sx = x + 2.0;
             let sy = y + 25.0 + 3.0;
-            if draw_slot(player.hand.as_ref(), sx, sy, mouse_x, mouse_y, assets) {
-                if self
+            if draw_slot(player.hand.as_ref(), sx, sy, mouse_x, mouse_y, assets)
+                && self
                     .cursor_item
                     .as_ref()
                     .is_none_or(|f| matches!(f.ty, ItemType::Held(_)))
-                {
-                    hovered = Some(&mut player.hand)
-                }
+            {
+                hovered = Some(&mut player.hand)
             }
             if hand_is_none {
                 assets.items.draw_sprite(sx + 6.0, sy + 6.0, 0.0, 2.0, None);

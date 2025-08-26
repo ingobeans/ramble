@@ -51,7 +51,7 @@ pub static WHITE_MATERIAL: LazyLock<Material> = LazyLock::new(|| {
     .unwrap()
 });
 
-pub const WHITE_FRAGMENT_SHADER: &'static str = "#version 100
+pub const WHITE_FRAGMENT_SHADER: &str = "#version 100
 precision lowp float;
 
 varying vec2 uv;
@@ -67,19 +67,7 @@ void main() {
 }
 ";
 
-pub const DEFAULT_FRAGMENT_SHADER: &'static str = "#version 100
-precision lowp float;
-
-varying vec2 uv;
-
-uniform sampler2D Texture;
-
-void main() {
-    gl_FragColor = texture2D(Texture, uv);
-}
-";
-
-pub const DEFAULT_VERTEX_SHADER: &'static str = "#version 100
+pub const DEFAULT_VERTEX_SHADER: &str = "#version 100
 precision lowp float;
 
 attribute vec3 position;

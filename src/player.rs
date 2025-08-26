@@ -112,12 +112,10 @@ impl Player {
     pub fn stats(&self) -> Stats {
         let mut stats = self.stats.clone();
 
-        for item in [&self.helmet, &self.chestplate, &self.hand] {
-            if let Some(item) = item {
-                stats.merge(&item.stats);
-                if let ItemType::Held(held) = &item.ty {
-                    stats.merge(&held.stats);
-                }
+        for item in [&self.helmet, &self.chestplate, &self.hand].into_iter().flatten() {
+            stats.merge(&item.stats);
+            if let ItemType::Held(held) = &item.ty {
+                stats.merge(&held.stats);
             }
         }
         stats.apply_modifiers();
@@ -130,12 +128,11 @@ impl Player {
         self.invuln_frames = 100;
         // find where to take heart
         for item in [&mut self.helmet, &mut self.chestplate, &mut self.hand] {
-            if let Some(item) = item {
-                if item.stats.lives > 0 {
+            if let Some(item) = item
+                && item.stats.lives > 0 {
                     item.stats.lives -= 1;
                     return;
                 }
-            }
         }
 
         self.stats.lives -= 1;

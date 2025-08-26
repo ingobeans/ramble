@@ -44,8 +44,8 @@ impl DungeonManager {
             let enemy = Enemy::new(ty, Vec2::new(x, y), 0);
             enemies.push(enemy);
         }
-        if !self.world.other.is_empty() {
-            if rand::gen_range(0, 100) < OTHER_CHANCE {
+        if !self.world.other.is_empty()
+            && rand::gen_range(0, 100) < OTHER_CHANCE {
                 // spawn an "other" in top left and right corners
                 let ty = select_random(&self.world.other);
                 let positions = [Vec2::new(8.0, 8.0), Vec2::new(SCREEN_WIDTH - 8.0, 8.0)];
@@ -54,7 +54,6 @@ impl DungeonManager {
                     enemies.push(enemy);
                 }
             }
-        }
 
         enemies
     }
