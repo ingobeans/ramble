@@ -1,6 +1,11 @@
 use macroquad::prelude::*;
 
-use crate::{assets::Assets, items::Item, player::Player, utils::*};
+use crate::{
+    assets::Assets,
+    items::{Item, ItemType},
+    player::Player,
+    utils::*,
+};
 
 #[derive(Default)]
 pub struct UiManager {
@@ -35,15 +40,36 @@ impl UiManager {
             let sx = x + 2.0 + 25.0 + 2.0;
             let mut sy = y + 2.0;
             // helmet
+            let helmet_is_none = player.helmet.is_none();
             if draw_slot(player.helmet.as_ref(), sx, sy, mouse_x, mouse_y, assets) {
-                hovered = Some(&mut player.helmet);
+                if self
+                    .cursor_item
+                    .as_ref()
+                    .is_none_or(|f| f.ty == ItemType::Helmet)
+                {
+                    hovered = Some(&mut player.helmet);
+                }
+            }
+            if helmet_is_none {
+                assets.items.draw_sprite(sx + 6.0, sy + 6.0, 0.0, 1.0, None);
             }
 
             // chestplate
+            let chestplate_is_none = player.chestplate.is_none();
             sy += 12.0 + 1.0;
             if draw_slot(player.chestplate.as_ref(), sx, sy, mouse_x, mouse_y, assets) {
-                hovered = Some(&mut player.chestplate)
+                if self
+                    .cursor_item
+                    .as_ref()
+                    .is_none_or(|f| f.ty == ItemType::Chestplate)
+                {
+                    hovered = Some(&mut player.chestplate)
+                }
             }
+            if chestplate_is_none {
+                assets.items.draw_sprite(sx + 6.0, sy + 6.0, 0.0, 0.0, None);
+            }
+
             // inventory
             for (index, slot) in player.inventory.iter_mut().enumerate() {
                 let sx = x + 2.0 + (12.0 + 2.0) * index as f32;
@@ -64,8 +90,9 @@ impl UiManager {
                 );
             }
             if is_mouse_button_pressed(MouseButton::Left) {
-                // if a slot is hovered, replace it with the cursor item
                 if let Some(hovered) = hovered {
+                    // if a slot is hovered,  replace it with the cursor item
+
                     std::mem::swap(&mut self.cursor_item, hovered);
                 } else if (!(x..x + width).contains(&mouse_x)
                     || !(y..y + height).contains(&mouse_y))

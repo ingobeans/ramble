@@ -1,4 +1,6 @@
 mod types;
+use std::mem::discriminant;
+
 pub use types::*;
 
 use crate::{player::Stats, projectiles::Projectile};
@@ -18,6 +20,11 @@ pub enum ItemType {
     Chestplate,
     Held(Weapon),
     Talisman,
+}
+impl PartialEq for ItemType {
+    fn eq(&self, other: &Self) -> bool {
+        discriminant(self) == discriminant(other)
+    }
 }
 impl Default for ItemType {
     fn default() -> Self {

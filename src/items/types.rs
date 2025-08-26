@@ -16,7 +16,7 @@ pub fn get_items() -> Vec<Item> {
                 speed_mod: -0.1,
                 ..Default::default()
             },
-            sprite_x: 0.0,
+            sprite_x: 1.0,
             sprite_y: 0.0,
             ..Default::default()
         },
@@ -28,7 +28,7 @@ pub fn get_items() -> Vec<Item> {
                 lives: 1,
                 ..Default::default()
             },
-            sprite_x: 0.0,
+            sprite_x: 1.0,
             sprite_y: 1.0,
             ..Default::default()
         },
@@ -42,7 +42,7 @@ pub fn get_items() -> Vec<Item> {
                 },
                 projectile: projectiles::arrow(),
             }),
-            sprite_x: 0.0,
+            sprite_x: 1.0,
             sprite_y: 2.0,
             ..Default::default()
         },
@@ -56,7 +56,7 @@ pub fn get_items() -> Vec<Item> {
                 },
                 projectile: projectiles::slash(),
             }),
-            sprite_x: 1.0,
+            sprite_x: 2.0,
             sprite_y: 2.0,
             ..Default::default()
         },
@@ -74,7 +74,7 @@ pub fn get_items() -> Vec<Item> {
                 speed_mod: 0.1,
                 ..Default::default()
             },
-            sprite_x: 2.0,
+            sprite_x: 3.0,
             sprite_y: 2.0,
             ..Default::default()
         },
