@@ -28,17 +28,42 @@ pub fn get_movement_vector() -> Vec2 {
 #[derive(Default, Clone)]
 pub struct Stats {
     pub speed: f32,
-    pub max_lives: u16,
+    pub speed_mod: f32,
+    pub attack_delay_mod: f32,
     pub attack_delay: f32,
     pub roll_delay: f32,
+    pub roll_delay_mod: f32,
+    pub max_lives: u16,
     pub damage: HashMap<DamageType, f32>,
+    pub damage_modifiers: HashMap<DamageType, f32>,
 }
 impl Stats {
     pub fn merge(&mut self, other: &Stats) {
-        self.speed += other.speed;
+        self.speed_mod += other.speed_mod;
         self.max_lives += other.max_lives;
+        self.attack_delay_mod += other.attack_delay_mod;
         self.attack_delay += other.attack_delay;
-        self.roll_delay += other.roll_delay;
+        self.roll_delay_mod += other.roll_delay_mod;
+        for (k, v) in &other.damage_modifiers {
+            if self.damage_modifiers.contains_key(k) {
+                self.damage_modifiers
+                    .insert(*k, self.damage_modifiers[k] + *v);
+            } else {
+                self.damage_modifiers.insert(*k, *v);
+            }
+        }
+        for (k, v) in &other.damage {
+            if self.damage.contains_key(k) {
+                self.damage.insert(*k, self.damage[k] + *v);
+            } else {
+                self.damage.insert(*k, *v);
+            }
+        }
+    }
+    pub fn apply_modifiers(&mut self) {
+        self.speed *= 1.0 + self.speed_mod;
+        self.attack_delay *= 1.0 + self.attack_delay_mod;
+        self.roll_delay *= 1.0 + self.roll_delay_mod;
     }
 }
 
@@ -76,6 +101,7 @@ impl Player {
     }
     pub fn stats(&self) -> Stats {
         let mut stats = self.stats.clone();
+
         for item in [&self.helmet, &self.chestplate, &self.hand, &self.offhand] {
             if let Some(item) = item {
                 stats.merge(&item.stats);
@@ -84,6 +110,7 @@ impl Player {
                 }
             }
         }
+        stats.apply_modifiers();
         stats
     }
     pub fn can_take_damage(&self) -> bool {

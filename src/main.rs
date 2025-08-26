@@ -31,7 +31,7 @@ struct Ramble<'a> {
 impl<'a> Ramble<'a> {
     fn new(assets: &'a Assets) -> Self {
         let mut player = Player::new(Vec2::new(SCREEN_WIDTH / 2.0, SCREEN_HEIGHT - 16.0));
-        player.hand = Some(assets.all_items[3].clone());
+        player.hand = Some(assets.all_items[4].clone());
 
         Ramble {
             assets,
@@ -104,7 +104,7 @@ impl<'a> Ramble<'a> {
 
                 if move_vector != Vec2::ZERO {
                     self.player.moving = true;
-                    self.player.anim_frame += self.player.stats().speed;
+                    self.player.anim_frame += speed;
                 } else {
                     self.player.moving = false;
                 }
@@ -124,7 +124,7 @@ impl<'a> Ramble<'a> {
                     && self.player.roll_counter <= 0.0
                     && self.player.moving
                 {
-                    self.player.roll_counter = self.player.stats().roll_delay;
+                    self.player.roll_counter = self.player.stats().roll_delay_mod;
                     self.player.roll = (12, move_vector)
                 }
 
@@ -139,11 +139,13 @@ impl<'a> Ramble<'a> {
                     projectile.pos = self.player.pos + delta * 10.0;
                     projectile.direction = delta;
                     projectile.player_owned = true;
-                    projectile.stats = Some(held.stats.clone());
+                    projectile.stats = Some(self.player.stats());
                     // make projectile travel faster if self.player is moving in same direction they're shooting
                     projectile.speed += 4.0 * (projectile.direction.dot(move_vector).max(0.0));
                     self.projectiles.push(projectile);
-                    self.player.attack_counter = self.player.stats().attack_delay;
+                    let stats = self.player.stats();
+                    self.player.attack_counter =
+                        stats.attack_delay * (1.0 + stats.attack_delay_mod);
                 }
 
                 self.projectiles.retain_mut(|projectile| {
@@ -158,7 +160,10 @@ impl<'a> Ramble<'a> {
                             if !projectile.hit_enemies.contains(&enemy.id)
                                 && (enemy.pos - projectile.pos).length() <= 8.0
                             {
-                                for (_, amt) in &stats.damage {
+                                for (k, mut amt) in stats.damage.clone() {
+                                    if let Some(modifier) = stats.damage_modifiers.get(&k) {
+                                        amt *= 1.0 + modifier;
+                                    }
                                     enemy.health -= amt;
                                 }
                                 enemy.damage_frames = 5;
