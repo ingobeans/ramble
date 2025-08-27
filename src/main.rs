@@ -22,23 +22,23 @@ use ui::UiManager;
 use utils::*;
 use worlds::*;
 
-enum GameState {
-    InRound,
-    PostRound(u32),
-    PreRound(u32),
+enum RoundState {
+    Active,
+    Post(u32, Option<[Item; 3]>),
+    Pre(u32),
 }
-impl GameState {
+impl RoundState {
     fn should_draw(&self) -> bool {
         match self {
-            GameState::InRound | GameState::PostRound(_) => true,
-            GameState::PreRound(frame) => *frame >= 40 / 2,
+            RoundState::Active | RoundState::Post(_, _) => true,
+            RoundState::Pre(frame) => *frame >= 40 / 2,
         }
     }
     fn door_frame(&self) -> f32 {
         match self {
-            GameState::InRound => 0.0,
-            GameState::PostRound(frame) => (*frame as f32 / 10.0 * 4.0).floor().min(3.0) * 2.0,
-            GameState::PreRound(frame) => {
+            RoundState::Active => 0.0,
+            RoundState::Post(frame, _) => (*frame as f32 / 10.0 * 4.0).floor().min(3.0) * 2.0,
+            RoundState::Pre(frame) => {
                 if *frame >= PREROUND_TRANSITION_TIME / 2 {
                     0.0
                 } else {
@@ -51,7 +51,7 @@ impl GameState {
 struct Ramble<'a> {
     assets: &'a Assets,
     player: Player,
-    state: GameState,
+    state: RoundState,
     enemies: Vec<Enemy>,
     dropped_items: Vec<(Vec2, Item)>,
     enemy_id: usize,
@@ -61,7 +61,7 @@ struct Ramble<'a> {
 }
 impl<'a> Ramble<'a> {
     fn new(assets: &'a Assets) -> Self {
-        let mut player = Player::new(Vec2::new(SCREEN_WIDTH / 2.0, SCREEN_HEIGHT - 16.0));
+        let mut player = Player::new(Vec2::new(SCREEN_WIDTH / 2.0, SCREEN_HEIGHT / 2.0));
         player.hand = Some(assets.all_items[3].clone());
         player.helmet = Some(assets.all_items[1].clone());
         player.chestplate = Some(assets.all_items[0].clone());
@@ -69,7 +69,7 @@ impl<'a> Ramble<'a> {
         Ramble {
             assets,
             player,
-            state: GameState::PostRound(0),
+            state: RoundState::Post(0, None),
             enemies: Vec::new(),
             dropped_items: Vec::new(),
             enemy_id: 0,
@@ -105,17 +105,18 @@ impl<'a> Ramble<'a> {
         let door_start_x = TILES_WIDTH / 2 - 1;
 
         // go to next room
-        if let GameState::PostRound(_) = self.state
+        if let RoundState::Post(_, _) = self.state
             && self.player.pos.y == 28.0
             && (door_start_x as f32 * 16.0 + 4.0..door_start_x as f32 * 16.0 + 28.0)
                 .contains(&self.player.pos.x)
             && is_key_down(KeyCode::W)
         {
             self.player.pos = Vec2::new(SCREEN_WIDTH / 2.0, SCREEN_HEIGHT - 16.0);
+            self.dropped_items.clear();
             self.enemies.clear();
             self.spawn_enemies(&mut self.dungeon_manager.spawn_room());
             self.dungeon_manager.room_index += 1;
-            self.state = GameState::PreRound(0);
+            self.state = RoundState::Pre(0);
         }
 
         if move_vector != Vec2::ZERO {
@@ -313,49 +314,18 @@ impl<'a> Ramble<'a> {
             enemy.health > 0.0
         });
 
-        if let GameState::InRound = self.state
+        if let RoundState::Active = self.state
             && self.enemies.is_empty()
         {
-            self.state = GameState::PostRound(0)
+            self.state = RoundState::Post(
+                0,
+                Some(std::array::from_fn(|_| {
+                    select_random(&self.assets.all_items).clone()
+                })),
+            )
         }
     }
-
-    fn draw(&mut self, mouse_x: f32, mouse_y: f32) {
-        // draws
-        for enemy in self.enemies.iter() {
-            enemy.draw(self.assets);
-        }
-
-        let mut item_under_player: Option<(usize, f32)> = None;
-
-        for (index, (pos, item)) in self.dropped_items.iter().enumerate() {
-            ui::draw_slot(Some(item), pos.x - 6.0, pos.y - 6.0, 0.0, 0.0, self.assets);
-
-            let dist = pos.distance(self.player.pos);
-            if dist <= 7.0 && item_under_player.is_none_or(|f| f.1 > dist) {
-                item_under_player = Some((index, dist));
-            }
-        }
-        if let Some(item_under_player) = item_under_player {
-            ui::draw_tooltip("press e to pick up", self.assets);
-            if is_key_pressed(KeyCode::E) && self.player.inv_slot_free() {
-                let item = self.dropped_items.remove(item_under_player.0).1;
-                for slot in self.player.inventory.iter_mut() {
-                    if slot.is_none() {
-                        *slot = Some(item);
-                        break;
-                    }
-                }
-            }
-        }
-
-        self.player.draw(self.assets, mouse_x, mouse_y);
-
-        for projectile in self.projectiles.iter() {
-            projectile.draw(self.assets);
-        }
-
-        // draw ui
+    fn draw_ui(&mut self, mouse_x: f32, mouse_y: f32) {
         let max = self.player.stats().max_lives;
         for i in 0..max {
             let sprite = if i < self.player.stats().lives {
@@ -378,6 +348,82 @@ impl<'a> Ramble<'a> {
             let mut pos = self.player.pos;
             pos += (Vec2::new(mouse_x, mouse_y) - self.player.pos).normalize() * 3.0;
             self.dropped_items.push((pos, dropped));
+        }
+    }
+    fn draw(&mut self, mouse_x: f32, mouse_y: f32) {
+        // draws
+        for enemy in self.enemies.iter() {
+            enemy.draw(self.assets);
+        }
+
+        let mut item_under_player: Option<(usize, f32)> = None;
+
+        for (index, (pos, item)) in self.dropped_items.iter().enumerate() {
+            ui::draw_slot(Some(item), pos.x - 6.0, pos.y - 6.0, 0.0, 0.0, self.assets);
+
+            let dist = pos.distance(self.player.pos);
+            if dist <= 7.0 && item_under_player.is_none_or(|f| f.1 > dist) {
+                item_under_player = Some((index, dist));
+            }
+        }
+        if let Some(item_under_player) = item_under_player {
+            ui::draw_tooltip("press e to pick up", self.assets);
+            if is_key_pressed(KeyCode::E) && self.player.inv_slot_free() {
+                let item = self.dropped_items.remove(item_under_player.0).1;
+                self.player.give_item(item);
+            }
+        }
+
+        self.player.draw(self.assets, mouse_x, mouse_y);
+
+        for projectile in self.projectiles.iter() {
+            projectile.draw(self.assets);
+        }
+    }
+    fn show_item_altars(&mut self) {
+        if let RoundState::Post(frame, items) = &mut self.state {
+            let top_positions = [
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                Some(1),
+                Some(4),
+                Some(6),
+                Some(8),
+            ];
+            let padding = 80.0;
+            let gap = (SCREEN_WIDTH - padding * 2.0) / 2.0;
+            let y = 88.0;
+            let anim =
+                ((*frame as f32 / 30.0).min(1.0) * (top_positions.len() as f32 - 1.0)).floor();
+            for index in 0..3 {
+                let x = padding + index as f32 * gap;
+                self.assets.world.draw_sprite(x, y, anim, 1.0, None);
+
+                if let Some(item) = items.as_ref().map(|f| &f[index]) {
+                    if let Some(pos) = top_positions[anim as usize] {
+                        ui::draw_slot(
+                            Some(item),
+                            x + 2.0 - 8.0,
+                            y - 4.0 - pos as f32,
+                            0.0,
+                            0.0,
+                            self.assets,
+                        );
+                    }
+                    if self.player.pos.distance(Vec2::new(x, y)) <= 16.0 {
+                        ui::draw_tooltip("press e to choose this reward", self.assets);
+                        if is_key_pressed(KeyCode::E) {
+                            let o = items.take().unwrap();
+                            self.player
+                                .give_item(o.into_iter().skip(index).next().unwrap());
+                        }
+                    }
+                }
+            }
         }
     }
     async fn run(&mut self) {
@@ -443,14 +489,14 @@ impl<'a> Ramble<'a> {
                 last = now;
 
                 match &mut self.state {
-                    GameState::InRound => {
+                    RoundState::Active => {
                         self.update(mouse_x, mouse_y);
                     }
-                    GameState::PostRound(frame) => {
+                    RoundState::Post(frame, _) => {
                         *frame = frame.saturating_add(1);
                         self.update(mouse_x, mouse_y);
                     }
-                    GameState::PreRound(frame) => {
+                    RoundState::Pre(frame) => {
                         let max = PREROUND_TRANSITION_TIME + PREROUND_GRACE_TIME;
                         *frame += 1;
                         if *frame < PREROUND_TRANSITION_TIME / 2 {
@@ -463,15 +509,22 @@ impl<'a> Ramble<'a> {
                         }
                         if *frame > max {
                             pixel_camera.offset.y = 0.0;
-                            self.state = GameState::InRound;
+                            self.state = RoundState::Active;
                         }
                     }
                 }
             }
 
+            if self.player.pos.y > 88.0 {
+                self.show_item_altars()
+            }
             if self.state.should_draw() {
                 self.draw(mouse_x, mouse_y);
             }
+            if self.player.pos.y <= 88.0 {
+                self.show_item_altars()
+            }
+            self.draw_ui(mouse_x, mouse_y);
 
             // draw pixel camera to actual screen
             set_default_camera();

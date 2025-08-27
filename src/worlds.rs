@@ -91,7 +91,7 @@ pub static WORLD_FOREST: LazyLock<World> = LazyLock::new(|| {
             max_health: 5.0,
         }],
         miniboss: vec![EnemyType {
-            speed: 2.0,
+            speed: 2.5,
             phases: vec![
                 EnemyPhase {
                     sprite_x: 96.0 / 16.0,

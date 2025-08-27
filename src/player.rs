@@ -103,6 +103,16 @@ impl Player {
             ..Default::default()
         }
     }
+    /// Panics if inventory full
+    pub fn give_item(&mut self, item: Item) {
+        for slot in self.inventory.iter_mut() {
+            if slot.is_none() {
+                *slot = Some(item);
+                return;
+            }
+        }
+        panic!("Inventory full!");
+    }
     pub fn inv_slot_free(&self) -> bool {
         for slot in self.inventory.iter() {
             if slot.is_none() {
