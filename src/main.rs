@@ -75,8 +75,12 @@ impl<'a> Ramble<'a> {
         loop {
             let (screen_width, screen_height) = screen_size();
             let scale_factor = (screen_width / SCREEN_WIDTH).min(screen_height / SCREEN_HEIGHT);
+            let horizontal_padding = (screen_width - SCREEN_WIDTH * scale_factor) / 2.0;
             let (mouse_x, mouse_y) = mouse_position();
-            let (mouse_x, mouse_y) = (mouse_x / scale_factor, mouse_y / scale_factor);
+            let (mouse_x, mouse_y) = (
+                (mouse_x - horizontal_padding) / scale_factor,
+                mouse_y / scale_factor,
+            );
 
             set_camera(&pixel_camera);
             clear_background(Color::from_hex(0x353658));
@@ -329,7 +333,7 @@ impl<'a> Ramble<'a> {
             set_default_camera();
             draw_texture_ex(
                 &pixel_camera.render_target.as_ref().unwrap().texture,
-                0.0,
+                horizontal_padding,
                 0.0,
                 WHITE,
                 DrawTextureParams {
@@ -347,7 +351,7 @@ impl<'a> Ramble<'a> {
 fn window_conf() -> Conf {
     Conf {
         window_title: "ramble".to_string(),
-        window_width: SCREEN_WIDTH as i32 * 3,
+        window_width: (SCREEN_WIDTH * HEIGHT_FACTOR) as i32 * 3,
         window_height: SCREEN_HEIGHT as i32 * 3,
         ..Default::default()
     }

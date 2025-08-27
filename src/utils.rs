@@ -5,11 +5,11 @@ use macroquad::{
     prelude::*,
 };
 
-// for screen res i wanted something 16:9 thats also divisble by 16
 pub const SCREEN_WIDTH: f32 = 256.0;
-pub const SCREEN_HEIGHT: f32 = 144.0;
+pub const SCREEN_HEIGHT: f32 = 144.0 * HEIGHT_FACTOR;
+pub const HEIGHT_FACTOR: f32 = 1.5;
 
-pub const TILES_HEIGHT: u32 = SCREEN_HEIGHT as u32 / 16;
+pub const TILES_HEIGHT: u32 = (SCREEN_HEIGHT / HEIGHT_FACTOR) as u32 / 16;
 pub const TILES_WIDTH: u32 = SCREEN_WIDTH as u32 / 16;
 
 pub const OTHER_CHANCE: u8 = 10;

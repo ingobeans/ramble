@@ -44,16 +44,15 @@ impl DungeonManager {
             let enemy = Enemy::new(ty, Vec2::new(x, y), 0);
             enemies.push(enemy);
         }
-        if !self.world.other.is_empty()
-            && rand::gen_range(0, 100) < OTHER_CHANCE {
-                // spawn an "other" in top left and right corners
-                let ty = select_random(&self.world.other);
-                let positions = [Vec2::new(8.0, 8.0), Vec2::new(SCREEN_WIDTH - 8.0, 8.0)];
-                for position in positions {
-                    let enemy = Enemy::new(ty, position, 0);
-                    enemies.push(enemy);
-                }
+        if !self.world.other.is_empty() && rand::gen_range(0, 100) < OTHER_CHANCE {
+            // spawn an "other" in top left and right corners
+            let ty = select_random(&self.world.other);
+            let positions = [Vec2::new(8.0, 8.0), Vec2::new(SCREEN_WIDTH - 8.0, 8.0)];
+            for position in positions {
+                let enemy = Enemy::new(ty, position, 0);
+                enemies.push(enemy);
             }
+        }
 
         enemies
     }
@@ -101,4 +100,4 @@ pub static LAYOUTS: LazyLock<[Vec<Layout>; 8]> = LazyLock::new(|| {
     })
 });
 
-pub type Layout = [Option<EnemyTier>; SCREEN_WIDTH as usize / 16 * SCREEN_HEIGHT as usize / 16];
+pub type Layout = [Option<EnemyTier>; TILES_WIDTH as usize * TILES_HEIGHT as usize];
