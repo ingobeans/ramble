@@ -90,7 +90,12 @@ impl UiManager {
                 let sy = y + 2.0 + (12.0 + 1.0) * index as f32;
                 draw_ui_rect(sx, sy, 12.0, 12.0);
                 let is_none = slot.is_none();
-                if draw_slot(slot.as_ref(), sx, sy, mouse_x, mouse_y, assets) {
+                if draw_slot(slot.as_ref(), sx, sy, mouse_x, mouse_y, assets)
+                    && self
+                        .cursor_item
+                        .as_ref()
+                        .is_none_or(|f| matches!(f.ty, ItemType::Talisman))
+                {
                     hovered = Some(slot)
                 }
                 if is_none {
