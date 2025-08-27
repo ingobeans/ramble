@@ -57,6 +57,7 @@ impl<'a> Ramble<'a> {
     fn spawn_enemies(&mut self, buffer: &mut Vec<Enemy>) {
         for mut enemy in buffer.drain(..) {
             enemy.id = self.enemy_id;
+            enemy.pos.y += 32.0;
             self.enemy_id += 1;
             self.enemies.push(enemy);
         }
@@ -82,15 +83,35 @@ impl<'a> Ramble<'a> {
                 mouse_y / scale_factor,
             );
 
+            clear_background(Color::from_hex(0x180d2f));
             set_camera(&pixel_camera);
             clear_background(Color::from_hex(0x353658));
             // draw background tiles
-            for y in 0..SCREEN_HEIGHT as u32 / 16 {
+            let screen_tiles = SCREEN_HEIGHT as u32 / 16;
+            let door_start_x = TILES_WIDTH / 2 - 1;
+            for y in 0..screen_tiles {
                 for x in 0..TILES_WIDTH {
+                    let tile = if y == 0 {
+                        7.0
+                    } else if x == 0 {
+                        if y == 1 { 5.0 } else { 3.0 }
+                    } else if x == TILES_WIDTH - 1 {
+                        if y == 1 { 6.0 } else { 4.0 }
+                    } else if y == 1 {
+                        if x == door_start_x {
+                            8.0
+                        } else if x == door_start_x + 1 {
+                            9.0
+                        } else {
+                            2.0
+                        }
+                    } else {
+                        0.0
+                    };
                     self.assets.world.draw_sprite(
                         x as f32 * 16.0 + 8.0,
                         y as f32 * 16.0 + 8.0,
-                        0.0,
+                        tile,
                         0.0,
                         None,
                     );
@@ -107,7 +128,21 @@ impl<'a> Ramble<'a> {
                 } else {
                     (self.player.roll.1, 4.0)
                 };
-                self.player.pos += move_vector * speed;
+                let max_y = 28.0;
+                self.player.pos = (self.player.pos + move_vector * speed).clamp(
+                    Vec2::new(4.0, max_y),
+                    Vec2::new(SCREEN_WIDTH - 4.0, SCREEN_HEIGHT - 8.0),
+                );
+                if self.player.pos.y == 28.0
+                    && (door_start_x as f32 * 16.0 + 4.0..door_start_x as f32 * 16.0 + 28.0)
+                        .contains(&self.player.pos.x)
+                    && is_key_down(KeyCode::W)
+                {
+                    self.player.pos = Vec2::new(SCREEN_WIDTH / 2.0, SCREEN_HEIGHT - 16.0);
+                    self.enemies.clear();
+                    self.spawn_enemies(&mut self.dungeon_manager.spawn_room());
+                    self.dungeon_manager.room_index += 1;
+                }
 
                 if move_vector != Vec2::ZERO {
                     self.player.moving = true;
@@ -217,7 +252,7 @@ impl<'a> Ramble<'a> {
                                 // or distance was less than 4.0
                                 enemy.move_target = Some(Vec2::new(
                                     rand::gen_range(0.0, SCREEN_WIDTH),
-                                    rand::gen_range(0.0, SCREEN_HEIGHT),
+                                    rand::gen_range(32.0, SCREEN_HEIGHT),
                                 ));
                             }
                         }
