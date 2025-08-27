@@ -12,7 +12,6 @@ use crate::{
 pub struct DungeonManager {
     pub world: &'static World,
     pub room_index: usize,
-    pub room_in_progress: bool,
 }
 impl DungeonManager {
     pub fn spawn_room(&self) -> Vec<Enemy> {
