@@ -367,10 +367,14 @@ impl<'a> Ramble<'a> {
             }
         }
         if let Some(item_under_player) = item_under_player {
-            ui::draw_tooltip("press e to pick up", self.assets);
-            if is_key_pressed(KeyCode::E) && self.player.inv_slot_free() {
-                let item = self.dropped_items.remove(item_under_player.0).1;
-                self.player.give_item(item);
+            if self.player.inv_slot_free() {
+                ui::draw_tooltip("press e to pick up", self.assets);
+                if is_key_pressed(KeyCode::E) {
+                    let item = self.dropped_items.remove(item_under_player.0).1;
+                    self.player.give_item(item);
+                }
+            } else {
+                ui::draw_tooltip("inventory full", self.assets);
             }
         }
 
@@ -415,11 +419,15 @@ impl<'a> Ramble<'a> {
                         );
                     }
                     if self.player.pos.distance(Vec2::new(x, y)) <= 16.0 {
-                        ui::draw_tooltip("press e to choose this reward", self.assets);
-                        if is_key_pressed(KeyCode::E) {
-                            let o = items.take().unwrap();
-                            self.player
-                                .give_item(o.into_iter().skip(index).next().unwrap());
+                        if self.player.inv_slot_free() {
+                            ui::draw_tooltip("press e to choose this reward", self.assets);
+                            if is_key_pressed(KeyCode::E) {
+                                let o = items.take().unwrap();
+                                self.player
+                                    .give_item(o.into_iter().skip(index).next().unwrap());
+                            }
+                        } else {
+                            ui::draw_tooltip("inventory full", self.assets);
                         }
                     }
                 }
