@@ -48,6 +48,7 @@ impl<'a> Ramble<'a> {
             projectiles: Vec::new(),
             dungeon_manager: DungeonManager {
                 world: &WORLD_FOREST,
+                room_in_progress: false,
                 room_index: 0,
             },
             ui_manager: UiManager::default(),
@@ -70,7 +71,6 @@ impl<'a> Ramble<'a> {
             ..Default::default()
         };
         let mut last = get_time();
-        self.spawn_enemies(&mut self.dungeon_manager.spawn_room());
 
         loop {
             let (screen_width, screen_height) = screen_size();
@@ -85,7 +85,7 @@ impl<'a> Ramble<'a> {
             set_camera(&pixel_camera);
             clear_background(Color::from_hex(0x353658));
             // draw background tiles
-            for y in 0..TILES_HEIGHT {
+            for y in 0..SCREEN_HEIGHT as u32 / 16 {
                 for x in 0..TILES_WIDTH {
                     self.assets.world.draw_sprite(
                         x as f32 * 16.0 + 8.0,
@@ -273,12 +273,6 @@ impl<'a> Ramble<'a> {
                 });
             }
 
-            // check whether round complete
-            if self.enemies.is_empty() {
-                self.dungeon_manager.room_index += 1;
-                self.spawn_enemies(&mut self.dungeon_manager.spawn_room());
-            }
-
             // draws
             for enemy in self.enemies.iter() {
                 enemy.draw(self.assets);
@@ -360,7 +354,7 @@ impl<'a> Ramble<'a> {
 fn window_conf() -> Conf {
     Conf {
         window_title: "ramble".to_string(),
-        window_width: (SCREEN_WIDTH * HEIGHT_FACTOR) as i32 * 3,
+        window_width: (SCREEN_WIDTH * 1.5) as i32 * 3,
         window_height: SCREEN_HEIGHT as i32 * 3,
         ..Default::default()
     }

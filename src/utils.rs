@@ -6,11 +6,10 @@ use macroquad::{
 };
 
 pub const SCREEN_WIDTH: f32 = 256.0;
-pub const SCREEN_HEIGHT: f32 = 144.0 * HEIGHT_FACTOR;
-pub const HEIGHT_FACTOR: f32 = 1.5;
+pub const SCREEN_HEIGHT: f32 = 224.0;
 
-pub const TILES_HEIGHT: u32 = (SCREEN_HEIGHT / HEIGHT_FACTOR) as u32 / 16;
-pub const TILES_WIDTH: u32 = SCREEN_WIDTH as u32 / 16;
+pub const TILES_WIDTH: u32 = 16;
+pub const TILES_HEIGHT: u32 = 9;
 
 pub const OTHER_CHANCE: u8 = 10;
 
