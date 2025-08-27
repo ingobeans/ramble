@@ -86,25 +86,23 @@ pub fn fireball() -> Projectile {
     Projectile {
         speed: 2.0,
         draw_type: DrawType::Sprite(2.0, 0.0),
-        lifetime: 70,
+        lifetime: 140,
         ..BASE_PROJECTILE
     }
 }
 pub fn arrow() -> Projectile {
     Projectile {
         speed: 7.0,
-        drag: 0.03,
         draw_type: DrawType::Sprite(1.0, 0.0),
-        lifetime: 20,
+        lifetime: 80,
         ..BASE_PROJECTILE
     }
 }
 pub fn slow_arrow() -> Projectile {
     Projectile {
         speed: 3.0,
-        drag: 0.01,
         draw_type: DrawType::Sprite(1.0, 0.0),
-        lifetime: 60,
+        lifetime: 160,
         ..BASE_PROJECTILE
     }
 }
