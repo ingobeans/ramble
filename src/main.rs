@@ -185,30 +185,29 @@ impl<'a> Ramble<'a> {
 
                     projectile.life < projectile.lifetime
                 });
+                let enemy_positions: Vec<Vec2> = self.enemies.iter().map(|f| f.pos).collect();
 
                 self.enemies.retain_mut(|enemy| {
                     let player_delta = self.player.pos - enemy.pos;
                     enemy.damage_frames = enemy.damage_frames.saturating_sub(1);
+                    let mut move_direction = Vec2::ZERO;
                     // move
                     match enemy.ty.movement {
                         EnemyMovement::Chase => {
                             enemy.direction = player_delta.normalize();
-                            enemy.pos += enemy.direction * enemy.ty.speed;
-                            enemy.anim_frame += enemy.ty.speed;
+                            move_direction = enemy.direction;
                         }
                         EnemyMovement::Wander(face_player) => {
                             let mut new_target = true;
                             if let Some(move_target) = enemy.move_target {
                                 new_target = false;
                                 let delta = move_target - enemy.pos;
-                                let direction = delta.normalize();
-                                enemy.pos += direction * enemy.ty.speed;
+                                move_direction = delta.normalize();
                                 if face_player {
                                     enemy.direction = player_delta.normalize();
                                 } else {
-                                    enemy.direction = direction;
+                                    enemy.direction = move_direction;
                                 }
-                                enemy.anim_frame += enemy.ty.speed;
                                 if delta.length() <= 4.0 {
                                     new_target = true;
                                 }
@@ -226,6 +225,16 @@ impl<'a> Ramble<'a> {
                             enemy.direction = RIGHT;
                         }
                     }
+                    for pos in enemy_positions.iter() {
+                        if pos != &enemy.pos {
+                            let delta = enemy.pos - *pos;
+                            if delta.length() <= 7.0 {
+                                move_direction = delta.normalize();
+                            }
+                        }
+                    }
+                    enemy.pos += move_direction * enemy.ty.speed;
+                    enemy.anim_frame += enemy.ty.speed;
                     // shoot
                     if enemy.attack_counter == 0 {
                         match &enemy.ty.projectile_firing {
