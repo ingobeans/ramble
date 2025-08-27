@@ -224,8 +224,8 @@ impl<'a> Ramble<'a> {
                         // set new move target if either no previous move target was set,
                         // or distance was less than 4.0
                         enemy.move_target = Some(Vec2::new(
-                            rand::gen_range(0.0, SCREEN_WIDTH),
-                            rand::gen_range(32.0, SCREEN_HEIGHT),
+                            rand::gen_range(bottom_left_corner.x, top_right_corner.x),
+                            rand::gen_range(bottom_left_corner.y, top_right_corner.y),
                         ));
                     }
                 }
