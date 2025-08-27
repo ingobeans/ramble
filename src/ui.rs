@@ -34,7 +34,15 @@ impl UiManager {
             let y = (SCREEN_HEIGHT - height) / 2.0;
             draw_ui_rect(x, y, width, height);
             draw_ui_rect(x + 2.0, y + 2.0, 25.0, 25.0);
-            player.draw_character(x + 2.0 + 12.0, y + 2.0 + 12.0, assets, 0.0, None);
+
+            let sx = x + 2.0 + 12.0;
+            let sy = y + 2.0 + 12.0;
+            player.draw_character(sx, sy, assets, 0.0, None);
+            if let Some(held) = &player.hand {
+                assets
+                    .items
+                    .draw_sprite(sx + 3.0, sy + 2.0, held.sprite_x, held.sprite_y, None);
+            }
             let mut hovered = None;
 
             let sx = x + 2.0 + 25.0 + 2.0;
