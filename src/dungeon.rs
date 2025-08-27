@@ -36,7 +36,8 @@ impl DungeonManager {
                 types = hashmap!(
                     EnemyTier::Light => select_random(&self.world.light),
                     EnemyTier::Heavy => select_random(&self.world.heavy),
-                    EnemyTier::Ranged =>  select_random(&self.world.ranged)
+                    EnemyTier::Ranged =>  select_random(&self.world.ranged),
+                    EnemyTier::Miniboss => select_random(&self.world.miniboss),
                 );
             }
             last_row = y;
@@ -63,15 +64,17 @@ pub struct World {
     pub heavy: Vec<EnemyType>,
     pub ranged: Vec<EnemyType>,
     pub other: Vec<EnemyType>,
+    pub miniboss: Vec<EnemyType>,
 }
 
-pub static LAYOUTS: LazyLock<[Vec<Layout>; 13]> = LazyLock::new(|| {
+pub static LAYOUTS: LazyLock<[Vec<Layout>; 14]> = LazyLock::new(|| {
     let layouts: [&[u8]; _] = [
         include_bytes!("../assets/layouts/0.png"),
         include_bytes!("../assets/layouts/1.png"),
         include_bytes!("../assets/layouts/2.png"),
         include_bytes!("../assets/layouts/3.png"),
         include_bytes!("../assets/layouts/4.png"),
+        include_bytes!("../assets/layouts/miniboss.png"),
         include_bytes!("../assets/layouts/5.png"),
         include_bytes!("../assets/layouts/6.png"),
         include_bytes!("../assets/layouts/7.png"),
@@ -97,6 +100,7 @@ pub static LAYOUTS: LazyLock<[Vec<Layout>; 13]> = LazyLock::new(|| {
                     Rgba([255, 255, 255, 255]) => Some(EnemyTier::Light),
                     Rgba([0, 0, 255, 255]) => Some(EnemyTier::Heavy),
                     Rgba([255, 255, 0, 255]) => Some(EnemyTier::Ranged),
+                    Rgba([255, 0, 0, 255]) => Some(EnemyTier::Miniboss),
                     _ => panic!(),
                 }
             }));

@@ -96,10 +96,12 @@ impl<'a> Ramble<'a> {
             (self.player.roll.1, 4.0)
         };
         let max_y = 28.0;
-        self.player.pos = (self.player.pos + move_vector * speed).clamp(
-            Vec2::new(4.0, max_y),
-            Vec2::new(SCREEN_WIDTH - 4.0, SCREEN_HEIGHT - 8.0),
-        );
+
+        let bottom_left_corner = Vec2::new(4.0, max_y);
+        let top_right_corner = Vec2::new(SCREEN_WIDTH - 4.0, SCREEN_HEIGHT - 8.0);
+
+        self.player.pos =
+            (self.player.pos + move_vector * speed).clamp(bottom_left_corner, top_right_corner);
         let door_start_x = TILES_WIDTH / 2 - 1;
 
         // go to next room
@@ -195,8 +197,9 @@ impl<'a> Ramble<'a> {
             let player_delta = self.player.pos - enemy.pos;
             enemy.damage_frames = enemy.damage_frames.saturating_sub(1);
             let mut move_direction = Vec2::ZERO;
+            let phase = enemy.get_phase();
             // move
-            match enemy.ty.movement {
+            match &phase.movement {
                 EnemyMovement::Chase => {
                     enemy.direction = player_delta.normalize();
                     move_direction = enemy.direction;
@@ -207,7 +210,7 @@ impl<'a> Ramble<'a> {
                         new_target = false;
                         let delta = move_target - enemy.pos;
                         move_direction = delta.normalize();
-                        if face_player {
+                        if *face_player {
                             enemy.direction = player_delta.normalize();
                         } else {
                             enemy.direction = move_direction;
@@ -225,8 +228,9 @@ impl<'a> Ramble<'a> {
                         ));
                     }
                 }
-                EnemyMovement::Still => {
-                    enemy.direction = RIGHT;
+                EnemyMovement::Still => {}
+                EnemyMovement::Fowards => {
+                    move_direction = enemy.direction;
                 }
             }
             for pos in enemy_positions.iter() {
@@ -241,7 +245,7 @@ impl<'a> Ramble<'a> {
             enemy.anim_frame += enemy.ty.speed;
             // shoot
             if enemy.attack_counter == 0 {
-                match &enemy.ty.projectile_firing {
+                match &phase.firing {
                     ProjectileFiring::Forwards(projectile, delay) => {
                         enemy.attack_counter = *delay;
                         let mut projectile = projectile.clone();
@@ -267,10 +271,43 @@ impl<'a> Ramble<'a> {
             } else {
                 enemy.attack_counter -= 1
             }
+            let mut collision = false;
+
+            let old = enemy.pos;
+            enemy.pos = enemy.pos.clamp(bottom_left_corner, top_right_corner);
+            if enemy.pos != old {
+                collision = true;
+            }
 
             // dmg player on contact
             if player_delta.length() <= 4.0 && self.player.can_take_damage() {
                 self.player.damage();
+                collision = true;
+            }
+
+            // check if phase should change
+            let phase_end = match &phase.end {
+                PhaseEndCondition::None => false,
+                PhaseEndCondition::SingleFrame => true,
+                PhaseEndCondition::Collision => collision,
+                PhaseEndCondition::Frames(target) => {
+                    if enemy.phase_frame_counter >= *target {
+                        enemy.phase_frame_counter = 0;
+                        true
+                    } else {
+                        enemy.phase_frame_counter += 1;
+                        false
+                    }
+                }
+                PhaseEndCondition::HealthUnder(percent) => {
+                    enemy.health / enemy.ty.max_health <= *percent
+                }
+            };
+            if phase_end {
+                enemy.phase_index += 1;
+                if enemy.phase_index >= enemy.ty.phases.len() {
+                    enemy.phase_index = 0;
+                }
             }
 
             enemy.health > 0.0

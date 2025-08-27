@@ -1,4 +1,3 @@
-
 use macroquad::prelude::*;
 
 use crate::{assets::Assets, projectiles::Projectile, utils::*};
@@ -10,6 +9,8 @@ pub enum EnemyMovement {
     Wander(bool),
     /// Stands still
     Still,
+    /// Runs straight forwards
+    Fowards,
 }
 
 pub enum ProjectileFiring {
@@ -25,15 +26,34 @@ pub enum EnemyTier {
     Ranged,
     Heavy,
     Extra,
+    Miniboss,
+}
+
+pub enum PhaseEndCondition {
+    /// Phase lasts indefinitely
+    None,
+    /// Phase only lasts for a single frame.
+    SingleFrame,
+    /// Phase lasts for a set number of frames.
+    Frames(u32),
+    /// Health needs to be under this factor of max.
+    HealthUnder(f32),
+    /// Phase ends when enemy collides with the player or a wall.
+    Collision,
+}
+
+pub struct EnemyPhase {
+    pub movement: EnemyMovement,
+    pub firing: ProjectileFiring,
+    pub sprite_x: f32,
+    pub sprite_y: f32,
+    pub frames: usize,
+    pub end: PhaseEndCondition,
 }
 
 pub struct EnemyType {
-    pub sprite_x: f32,
-    pub sprite_y: f32,
     pub speed: f32,
-    pub movement: EnemyMovement,
-    pub projectile_firing: ProjectileFiring,
-    pub frames: usize,
+    pub phases: Vec<EnemyPhase>,
     pub max_health: f32,
 }
 
@@ -48,10 +68,13 @@ pub struct Enemy {
     pub health: f32,
     pub damage_frames: u8,
     pub attack_counter: u8,
+    pub phase_index: usize,
+    /// Used only when the current phase's end condition is [PhaseEndCondition::Frames]
+    pub phase_frame_counter: u32,
 }
 impl Enemy {
     pub fn new(ty: &'static EnemyType, pos: Vec2, id: usize) -> Self {
-        let firing_delay = match &ty.projectile_firing {
+        let firing_delay = match &ty.phases.first().unwrap().firing {
             ProjectileFiring::None => 0,
             ProjectileFiring::Cardinally(_, delay) => *delay,
             ProjectileFiring::Forwards(_, delay) => *delay,
@@ -66,7 +89,12 @@ impl Enemy {
             health: ty.max_health,
             damage_frames: 0,
             attack_counter: rand::gen_range(0, firing_delay),
+            phase_index: 0,
+            phase_frame_counter: 0,
         }
+    }
+    pub fn get_phase(&self) -> &'static EnemyPhase {
+        &self.ty.phases[self.phase_index]
     }
     pub fn draw(&self, assets: &Assets) {
         let x = self.pos.x.floor();
@@ -78,12 +106,13 @@ impl Enemy {
         if self.damage_frames > 0 {
             gl_use_material(&WHITE_MATERIAL);
         }
-        let anim = (self.anim_frame / 3.0).floor() % self.ty.frames as f32;
+        let phase = self.get_phase();
+        let anim = (self.anim_frame / 3.0).floor() % phase.frames as f32;
         assets.entities.draw_sprite(
             x,
             y,
-            self.ty.sprite_x + anim,
-            self.ty.sprite_y,
+            phase.sprite_x + anim,
+            phase.sprite_y,
             Some(&draw_params),
         );
         gl_use_default_material();
