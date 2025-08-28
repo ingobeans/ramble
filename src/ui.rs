@@ -130,6 +130,12 @@ impl UiManager {
                     assets,
                 );
             }
+            if self.cursor_item.is_none()
+                && let Some(Some(item)) = hovered
+            {
+                draw_hover_item(&item, mouse_x, mouse_y, assets);
+            }
+
             if is_mouse_button_pressed(MouseButton::Left) {
                 if let Some(hovered) = hovered {
                     // if a slot is hovered,  replace it with the cursor item
@@ -148,12 +154,28 @@ impl UiManager {
     }
 }
 
+pub fn draw_hover_item(item: &Item, x: f32, y: f32, assets: &Assets) {
+    let width = 128.0;
+    let height = 32.0;
+    draw_ui_rect(x, y, width, height);
+    draw_ui_rect(x + 2.0, y + 2.0, 12.0, 12.0);
+    item.ty.draw_icon(x + 2.0 + 6.0, y + 2.0 + 6.0, assets);
+    let x = x + 4.0 + 12.0;
+    let mut y = y + 2.0;
+    assets.draw_text(item.name, x, y);
+    y += 5.0;
+    for line in item.stats.to_text() {
+        assets.draw_text(&line, x, y);
+        y += 5.0;
+    }
+}
+
 pub fn draw_tooltip(text: &str, assets: &Assets) {
     let width = text.chars().count() as f32 * 4.0 + 4.0;
     let y = SCREEN_HEIGHT - 32.0;
     let x = (SCREEN_WIDTH - width) / 2.0;
     draw_ui_rect(x, y, width, 8.0);
-    assets.draw_text(text, x + 4.0, y + 4.0);
+    assets.draw_text(text, x + 2.0, y + 2.0);
 }
 
 pub fn draw_slot(
@@ -165,7 +187,7 @@ pub fn draw_slot(
     assets: &Assets,
 ) -> bool {
     draw_ui_rect(x, y, 12.0, 12.0);
-    let hovered = (x..x + 12.0).contains(&mouse_x) && (y..y + 12.0).contains(&mouse_y);
+    let hovered = (x..x + 12.0).contains(&mouse_x) && (y - 1.0..y + 12.0 + 1.0).contains(&mouse_y);
     if let Some(item) = item {
         assets
             .items

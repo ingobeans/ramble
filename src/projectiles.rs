@@ -11,6 +11,18 @@ pub enum DamageType {
     Unholy,
     Holy,
 }
+impl DamageType {
+    pub fn to_text(&self) -> &'static str {
+        match self {
+            DamageType::Slashing => "slashing",
+            DamageType::Piercing => "piercing",
+            DamageType::Fire => "fire",
+            DamageType::Ice => "ice",
+            DamageType::Unholy => "unholy",
+            DamageType::Holy => "holy",
+        }
+    }
+}
 
 #[derive(Clone, Copy)]
 pub enum DrawType {

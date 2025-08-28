@@ -104,7 +104,7 @@ impl Enemy {
             ..Default::default()
         };
         if self.damage_frames > 0 {
-            gl_use_material(&WHITE_MATERIAL);
+            gl_use_material(&COLOR_MOD_MATERIAL);
         }
         let phase = self.get_phase();
         let anim = (self.anim_frame / 3.0).floor() % phase.frames as f32;

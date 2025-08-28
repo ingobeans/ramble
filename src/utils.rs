@@ -25,7 +25,16 @@ pub fn select_random<T>(items: &[T]) -> &T {
     &items[rand::gen_range(0, items.len())]
 }
 
-pub static WHITE_MATERIAL: LazyLock<Material> = LazyLock::new(|| {
+pub static COLORS: &[Vec4] = &[
+    Vec4::new(1.0, 1.0, 1.0, 1.0),
+    Vec4::new(0.0, 0.0, 0.0, 1.0),
+    Color::from_hex(0xda2424).to_vec(),
+    Color::from_hex(0x2890dc).to_vec(),
+    Color::from_hex(0x08b23b).to_vec(),
+    Color::from_hex(0x720d0d).to_vec(),
+];
+
+pub static COLOR_MOD_MATERIAL: LazyLock<Material> = LazyLock::new(|| {
     // to enable transparency!
     let pipeline = PipelineParams {
         alpha_blend: Some(BlendState::new(
@@ -40,29 +49,34 @@ pub static WHITE_MATERIAL: LazyLock<Material> = LazyLock::new(|| {
         )),
         ..Default::default()
     };
-    load_material(
+    let m = load_material(
         ShaderSource::Glsl {
             vertex: DEFAULT_VERTEX_SHADER,
-            fragment: WHITE_FRAGMENT_SHADER,
+            fragment: COLOR_MOD_FRAGMENT,
         },
         MaterialParams {
             pipeline_params: pipeline,
+            uniforms: vec![UniformDesc::new("color", UniformType::Float4)],
             ..Default::default()
         },
     )
-    .unwrap()
+    .unwrap();
+    m.set_uniform("color", COLORS[0]);
+    m
 });
 
-pub const WHITE_FRAGMENT_SHADER: &str = "#version 100
+pub const COLOR_MOD_FRAGMENT: &str = "#version 100
 precision lowp float;
 
 varying vec2 uv;
+
+uniform lowp vec4 color;
 
 uniform sampler2D Texture;
 
 void main() {
     if (texture2D(Texture, uv).a > 0.0) {
-        gl_FragColor = vec4(255,255,255,255);
+        gl_FragColor = color;
     } else {
         gl_FragColor = texture2D(Texture, uv);
     }

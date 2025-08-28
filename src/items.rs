@@ -3,13 +3,10 @@ use std::mem::discriminant;
 
 pub use types::*;
 
-use crate::{player::Stats, projectiles::Projectile};
+use crate::{assets::Assets, player::Stats, projectiles::Projectile};
 
 #[derive(Clone)]
 pub struct Weapon {
-    /// Seperate from the parent item's regular stats,
-    /// as these only apply when item is held (not offhand).
-    pub stats: Stats,
     /// Projectile fired
     pub projectile: Projectile,
 }
@@ -20,6 +17,25 @@ pub enum ItemType {
     Chestplate,
     Held(Box<Weapon>),
     Talisman,
+}
+impl ItemType {
+    pub fn draw_icon(&self, x: f32, y: f32, assets: &Assets) {
+        let ty = match self {
+            ItemType::Chestplate => 0.0,
+            ItemType::Helmet => 1.0,
+            ItemType::Held(_) => 2.0,
+            ItemType::Talisman => 3.0,
+        };
+        assets.items.draw_sprite(x, y, 0.0, ty, None);
+    }
+    pub fn name(&self) -> &'static str {
+        match self {
+            ItemType::Talisman => "talisman",
+            ItemType::Chestplate => "chestplate",
+            ItemType::Helmet => "helmet",
+            ItemType::Held(_) => "weapon",
+        }
+    }
 }
 impl PartialEq for ItemType {
     fn eq(&self, other: &Self) -> bool {

@@ -7,6 +7,7 @@ use crate::{
     utils::*,
 };
 use macroquad::prelude::*;
+use struct_iterable::Iterable;
 
 pub fn get_movement_vector() -> Vec2 {
     let mut move_vector = Vec2::new(0.0, 0.0);
@@ -25,10 +26,10 @@ pub fn get_movement_vector() -> Vec2 {
     move_vector.try_normalize().unwrap_or(Vec2::ZERO)
 }
 
-#[derive(Default, Clone)]
+#[derive(Default, Clone, Iterable)]
 pub struct Stats {
-    pub speed: f32,
-    pub speed_mod: f32,
+    pub move_speed: f32,
+    pub move_speed_mod: f32,
     pub attack_delay_mod: f32,
     pub attack_delay: f32,
     pub roll_delay: f32,
@@ -39,10 +40,59 @@ pub struct Stats {
     pub damage_modifiers: HashMap<DamageType, f32>,
 }
 impl Stats {
+    pub fn to_text(&self) -> Vec<String> {
+        let mut lines = Vec::new();
+        if self.max_lives != 0 {
+            lines.push(format!(
+                "\x02H\x01 lives: {}/{}",
+                self.lives, self.max_lives
+            ));
+        }
+        for (k, v) in self.iter() {
+            if let Some(f) = v.downcast_ref::<f32>() {
+                if *f == f32::default() {
+                    continue;
+                }
+                let is_mod = k.ends_with("_mod");
+                let mut formatted = k.replace("_", " ");
+                if is_mod {
+                    formatted = formatted.trim_end_matches(" mod").to_string();
+                }
+                if formatted.contains("move speed") || formatted.contains("roll delay") {
+                    formatted = format!("\x04{formatted}\x01");
+                }
+                if formatted.contains("attack") {
+                    formatted = format!("\x03{formatted}\x01");
+                }
+                if is_mod {
+                    lines.push(format!("{}: {:+}%", formatted, (f * 100.0).round()));
+                } else {
+                    lines.push(format!("{}: {}", formatted, f.round()));
+                }
+            }
+        }
+        for (k, v) in &self.damage {
+            if *v == f32::default() {
+                continue;
+            }
+            lines.push(format!("\x00{} damage\x01: {v}", k.to_text()));
+        }
+        for (k, v) in &self.damage_modifiers {
+            if *v == f32::default() {
+                continue;
+            }
+            lines.push(format!(
+                "\x00{} damage\x01: {:+}%",
+                k.to_text(),
+                (v * 100.0).round()
+            ));
+        }
+        lines
+    }
     pub fn merge(&mut self, other: &Stats) {
         self.max_lives += other.max_lives;
         self.lives += other.lives;
-        self.speed_mod += other.speed_mod;
+        self.move_speed_mod += other.move_speed_mod;
         self.attack_delay_mod += other.attack_delay_mod;
         self.attack_delay += other.attack_delay;
         self.roll_delay_mod += other.roll_delay_mod;
@@ -63,7 +113,7 @@ impl Stats {
         }
     }
     pub fn apply_modifiers(&mut self) {
-        self.speed *= 1.0 + self.speed_mod;
+        self.move_speed *= 1.0 + self.move_speed_mod;
         self.attack_delay *= 1.0 + self.attack_delay_mod;
         self.roll_delay *= 1.0 + self.roll_delay_mod;
     }
@@ -96,7 +146,7 @@ impl Player {
             stats: Stats {
                 max_lives: 3,
                 lives: 3,
-                speed: 1.5,
+                move_speed: 1.5,
                 roll_delay: 60.0,
                 ..Default::default()
             },
@@ -129,9 +179,6 @@ impl Player {
             .flatten()
         {
             stats.merge(&item.stats);
-            if let ItemType::Held(held) = &item.ty {
-                stats.merge(&held.stats);
-            }
         }
         stats.apply_modifiers();
         stats
@@ -191,7 +238,7 @@ impl Player {
 
         // make player flash white
         if self.invuln_frames != 0 && (self.invuln_frames as f32 / 10.0).floor() % 2.0 == 1.0 {
-            gl_use_material(&WHITE_MATERIAL);
+            gl_use_material(&COLOR_MOD_MATERIAL);
         }
 
         if self.roll.0 != 0 {

@@ -3,7 +3,10 @@ use hashmap_macro::hashmap;
 use image::EncodableLayout;
 use macroquad::prelude::*;
 
-use crate::items::{Item, get_items};
+use crate::{
+    items::{Item, get_items},
+    utils::*,
+};
 
 pub struct Assets {
     pub all_items: Vec<Item>,
@@ -46,9 +49,12 @@ impl Default for Assets {
     }
 }
 impl Assets {
-    pub fn draw_text(&self, text: &str, mut x: f32, mut y: f32) {
+    pub fn draw_text(&self, text: &str, mut x: f32, mut y: f32) -> (f32, f32) {
         let original_x = x;
-        let hardcoded = hashmap!(':'=>36,'.'=>37,'-'=>38,'%'=>39,'+'=>40);
+        let original_y = y;
+        let hardcoded = hashmap!(':'=>36,'.'=>37,'-'=>38,'%'=>39,'+'=>40,'/'=>41,'H'=>42);
+        gl_use_material(&COLOR_MOD_MATERIAL);
+        COLOR_MOD_MATERIAL.set_uniform("color", COLORS[1]);
 
         for char in text.chars() {
             if char == '\n' {
@@ -60,6 +66,10 @@ impl Assets {
                 continue;
             }
             let code = char as u8;
+            if code < COLORS.len() as u8 {
+                COLOR_MOD_MATERIAL.set_uniform("color", COLORS[code as usize]);
+            }
+
             let index = if let Some(value) = hardcoded.get(&char) {
                 *value
             } else if code.is_ascii_lowercase() {
@@ -69,10 +79,15 @@ impl Assets {
             } else {
                 continue;
             };
-            self.font.draw_sprite(x, y, index as f32, 0.0, None);
+            self.font
+                .draw_sprite(x + 2.0, y + 2.0, index as f32, 0.0, None);
 
             x += 4.0
         }
+
+        COLOR_MOD_MATERIAL.set_uniform("color", COLORS[0]);
+        gl_use_default_material();
+        (x - original_x, y - original_y)
     }
 }
 

@@ -91,7 +91,7 @@ impl<'a> Ramble<'a> {
     }
     fn update(&mut self, mouse_x: f32, mouse_y: f32) {
         let (move_vector, speed) = if self.player.roll.0 == 0 {
-            (get_movement_vector(), self.player.stats().speed)
+            (get_movement_vector(), self.player.stats().move_speed)
         } else {
             (self.player.roll.1, 4.0)
         };
