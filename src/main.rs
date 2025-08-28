@@ -114,6 +114,7 @@ impl<'a> Ramble<'a> {
             self.player.pos = Vec2::new(SCREEN_WIDTH / 2.0, SCREEN_HEIGHT - 16.0);
             self.dropped_items.clear();
             self.enemies.clear();
+            self.projectiles.clear();
             self.spawn_enemies(&mut self.dungeon_manager.spawn_room());
             self.dungeon_manager.room_index += 1;
             self.state = RoundState::Pre(0);
@@ -154,12 +155,15 @@ impl<'a> Ramble<'a> {
             projectile.direction = delta;
             projectile.player_owned = true;
             projectile.stats = Some(self.player.stats());
-            // make projectile travel faster if self.player is moving in same direction they're shooting
-            projectile.speed += 4.0 * (projectile.direction.dot(move_vector).max(0.0));
+            // make projectile travel faster if self.player is moving in same direction they're shooting,
+            // relative to the projectiles drag. more drag => more affected by players move direction
+            projectile.speed +=
+                (25.0 * projectile.drag) * (projectile.direction.dot(move_vector).max(0.0));
             self.projectiles.push(projectile);
             let stats = self.player.stats();
             self.player.attack_counter = stats.attack_delay;
         }
+        let mut new_projectiles = Vec::new();
 
         self.projectiles.retain_mut(|projectile| {
             projectile.pos += projectile.direction * projectile.speed;
@@ -173,13 +177,15 @@ impl<'a> Ramble<'a> {
                     if !projectile.hit_enemies.contains(&enemy.id)
                         && (enemy.pos - projectile.pos).length() <= 8.0
                     {
+                        // todo: make projectiles moving faster than 8.0 pixels/frame have their hit scan split in to multiple steps
                         for (k, mut amt) in stats.damage.clone() {
-                            if let Some(modifier) = stats.damage_modifiers.get(&k) {
+                            if let Some(modifier) = self.player.stats().damage_modifiers.get(&k) {
                                 amt *= 1.0 + modifier;
                             }
                             enemy.health -= amt;
                         }
                         enemy.damage_frames = 5;
+                        new_projectiles.append(&mut projectile.on_hit());
                         projectile.hit_enemies.push(enemy.id);
                     }
                 }
@@ -189,9 +195,17 @@ impl<'a> Ramble<'a> {
                     self.player.damage();
                 }
             }
+            let old = projectile.pos;
+            projectile.pos = projectile.pos.clamp(bottom_left_corner, top_right_corner);
+            if projectile.pos != old {
+                // projectile collided with wall
+                new_projectiles.append(&mut projectile.on_hit());
+                return false;
+            }
 
             projectile.life < projectile.lifetime
         });
+        self.projectiles.append(&mut new_projectiles);
         let enemy_positions: Vec<Vec2> = self.enemies.iter().map(|f| f.pos).collect();
 
         self.enemies.retain_mut(|enemy| {
@@ -444,6 +458,15 @@ impl<'a> Ramble<'a> {
             ..Default::default()
         };
         let mut last = get_time();
+        for (index, item) in self.assets.all_items.clone().into_iter().enumerate() {
+            self.dropped_items.push((
+                Vec2::new(
+                    (index as f32 * 14.0 + 20.0) % (SCREEN_WIDTH - 20.0),
+                    (index as f32 * 14.0) / (SCREEN_WIDTH - 20.0) + 48.0,
+                ),
+                item,
+            ));
+        }
 
         loop {
             let (screen_width, screen_height) = screen_size();

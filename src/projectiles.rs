@@ -1,6 +1,13 @@
+use std::collections::HashMap;
+
+use hashmap_macro::hashmap;
 use macroquad::prelude::*;
 
-use crate::{assets::Assets, particles::*, player::Stats};
+use crate::{
+    assets::Assets,
+    particles::{self, *},
+    player::Stats,
+};
 
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]
 pub enum DamageType {
@@ -35,6 +42,11 @@ impl Default for DrawType {
     }
 }
 
+#[derive(Clone)]
+pub enum OnHit {
+    SummonProjectile(Projectile, HashMap<DamageType, f32>),
+}
+
 #[derive(Clone, Default)]
 pub struct Projectile {
     pub pos: Vec2,
@@ -46,9 +58,29 @@ pub struct Projectile {
     pub life: u16,
     pub lifetime: u16,
     pub hit_enemies: Vec<usize>,
+    pub on_hit: Vec<OnHit>,
     pub stats: Option<Stats>,
 }
 impl Projectile {
+    pub fn on_hit(&self) -> Vec<Projectile> {
+        let mut new_projectiles = Vec::new();
+        for on_hit in self.on_hit.iter() {
+            match on_hit {
+                OnHit::SummonProjectile(proj, damage) => {
+                    let mut proj = proj.clone();
+                    proj.stats = self.stats.clone();
+                    if let Some(stats) = &mut proj.stats {
+                        stats.damage = damage.clone();
+                    }
+                    proj.pos = self.pos;
+                    proj.direction = self.direction;
+                    proj.player_owned = true;
+                    new_projectiles.push(proj);
+                }
+            }
+        }
+        new_projectiles
+    }
     pub fn draw(&self, assets: &Assets) {
         let x = self.pos.x.floor();
         let y = self.pos.y.floor();
@@ -63,8 +95,10 @@ impl Projectile {
                     .draw_sprite(x, y, *sprite_x, *sprite_y, Some(&params));
             }
             DrawType::Particle(particle) => {
+                let origin = self.pos - self.direction * self.life as f32 * self.speed;
                 let ctx = ParticleContext {
                     pos: self.pos,
+                    origin,
                     life: self.life,
                 };
                 particle(&ctx, assets);
@@ -83,6 +117,7 @@ pub const BASE_PROJECTILE: Projectile = Projectile {
     stats: None,
     player_owned: false,
     hit_enemies: Vec::new(),
+    on_hit: Vec::new(),
 };
 
 pub fn slash() -> Projectile {
@@ -116,5 +151,56 @@ pub fn slow_arrow() -> Projectile {
         draw_type: DrawType::Sprite(1.0, 0.0),
         lifetime: 160,
         ..BASE_PROJECTILE
+    }
+}
+pub fn boxing_glove() -> Projectile {
+    Projectile {
+        speed: 3.0,
+        drag: 0.1,
+        draw_type: DrawType::Sprite(3.0, 0.0),
+        lifetime: 20,
+        ..BASE_PROJECTILE
+    }
+}
+pub fn icicle() -> Projectile {
+    Projectile {
+        speed: 6.0,
+        lifetime: 90,
+        draw_type: DrawType::Sprite(4.0, 0.0),
+        ..Default::default()
+    }
+}
+pub fn power_orb() -> Projectile {
+    Projectile {
+        speed: 2.0,
+        lifetime: 60,
+        draw_type: DrawType::Sprite(5.0, 0.0),
+        ..Default::default()
+    }
+}
+pub fn light_ray() -> Projectile {
+    Projectile {
+        speed: 16.0,
+        lifetime: 6,
+        draw_type: DrawType::Particle(&particles::LIGHT_RAY),
+        ..Default::default()
+    }
+}
+pub fn star_bazooka() -> Projectile {
+    let star_explosion = Projectile {
+        speed: 0.0,
+        lifetime: 15,
+        draw_type: DrawType::Particle(&particles::STAR_EXPLOSION),
+        ..Default::default()
+    };
+    Projectile {
+        speed: 2.0,
+        lifetime: 160,
+        draw_type: DrawType::Sprite(6.0, 0.0),
+        on_hit: vec![OnHit::SummonProjectile(
+            star_explosion,
+            hashmap!(DamageType::Holy=>0.0),
+        )],
+        ..Default::default()
     }
 }

@@ -48,7 +48,7 @@ pub static WORLD_FOREST: LazyLock<World> = LazyLock::new(|| {
                     end: PhaseEndCondition::None,
                     frames: 2,
                 }],
-                max_health: 5.0,
+                max_health: 15.0,
             },
             // goblin knife
             EnemyType {
@@ -61,7 +61,7 @@ pub static WORLD_FOREST: LazyLock<World> = LazyLock::new(|| {
                     end: PhaseEndCondition::None,
                     frames: 2,
                 }],
-                max_health: 10.0,
+                max_health: 25.0,
             },
         ],
         ranged: vec![EnemyType {
