@@ -42,11 +42,6 @@ impl Default for DrawType {
     }
 }
 
-#[derive(Clone)]
-pub enum OnHit {
-    SummonProjectile(Projectile, HashMap<DamageType, f32>),
-}
-
 #[derive(Clone, Default)]
 pub struct Projectile {
     pub pos: Vec2,

@@ -243,10 +243,10 @@ impl Player {
     pub fn stats(&self) -> Stats {
         let mut stats = self.internal_stats.clone();
 
-        for item in [&self.helmet, &self.chestplate, &self.hand]
-            .into_iter()
-            .flatten()
-        {
+        let mut items = vec![&self.helmet, &self.chestplate, &self.hand];
+        let t = self.talismans.clone();
+        items.append(&mut t.iter().collect());
+        for item in items.into_iter().flatten() {
             stats.merge(&item.stats);
         }
         stats.apply_modifiers();
@@ -258,7 +258,13 @@ impl Player {
     pub fn damage(&mut self) {
         self.invuln_frames = 100;
         // find where to take heart
-        for item in [&mut self.helmet, &mut self.chestplate, &mut self.hand] {
+        let mut items: Vec<&mut Option<Item>> = self.talismans.iter_mut().collect();
+        items.append(&mut vec![
+            &mut self.helmet,
+            &mut self.chestplate,
+            &mut self.hand,
+        ]);
+        for item in items {
             if let Some(item) = item
                 && item.stats.lives > 0
             {

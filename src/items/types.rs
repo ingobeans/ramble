@@ -204,5 +204,17 @@ pub fn get_items() -> Vec<Item> {
             sprite_y: 2.0,
             ..Default::default()
         },
+        Item {
+            name: "heart pendant",
+            ty: ItemType::Talisman,
+            stats: Stats {
+                max_lives: 1,
+                lives: 1,
+                ..Default::default()
+            },
+            sprite_x: 1.0,
+            sprite_y: 3.0,
+            ..Default::default()
+        },
     ]
 }
