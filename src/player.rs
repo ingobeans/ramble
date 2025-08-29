@@ -1,6 +1,11 @@
 use std::collections::HashMap;
 
-use crate::{assets::Assets, items::Item, projectiles::DamageType, utils::*};
+use crate::{
+    assets::Assets,
+    items::Item,
+    projectiles::{DamageType, Projectile},
+    utils::*,
+};
 use enum_iterator::Sequence;
 use macroquad::prelude::*;
 use struct_iterable::Iterable;
@@ -47,9 +52,36 @@ pub struct Stats {
     pub lives: u16,
     pub damage: HashMap<DamageType, f32>,
     pub damage_modifiers: HashMap<DamageType, f32>,
+    pub on_hit_effects: HashMap<Option<DamageType>, Vec<(Projectile, HashMap<DamageType, f32>)>>,
 }
 impl Stats {
     pub fn to_text(&self) -> Vec<String> {
+        fn damage_modifiers_to_text(damage_modifiers: &HashMap<DamageType, f32>) -> Vec<String> {
+            let mut lines = Vec::new();
+
+            for (k, v) in damage_modifiers {
+                if *v == f32::default() {
+                    continue;
+                }
+                lines.push(format!(
+                    "\x00{} damage\x01: {:+}%",
+                    k.to_text(),
+                    (v * 100.0).round()
+                ));
+            }
+            lines
+        }
+        fn damage_to_text(damage: &HashMap<DamageType, f32>) -> Vec<String> {
+            let mut lines = Vec::new();
+
+            for (k, v) in damage {
+                if *v == f32::default() {
+                    continue;
+                }
+                lines.push(format!("\x00{} damage\x01: {v}", k.to_text()));
+            }
+            lines
+        }
         let mut lines = Vec::new();
         if self.max_lives != 0 {
             lines.push(format!(
@@ -80,21 +112,21 @@ impl Stats {
                 }
             }
         }
-        for (k, v) in &self.damage {
-            if *v == f32::default() {
+        lines.append(&mut &mut damage_to_text(&self.damage));
+        lines.append(&mut damage_modifiers_to_text(&self.damage_modifiers));
+        for (k, v) in &self.on_hit_effects {
+            if v.is_empty() {
                 continue;
             }
-            lines.push(format!("\x00{} damage\x01: {v}", k.to_text()));
-        }
-        for (k, v) in &self.damage_modifiers {
-            if *v == f32::default() {
-                continue;
-            }
-            lines.push(format!(
-                "\x00{} damage\x01: {:+}%",
-                k.to_text(),
-                (v * 100.0).round()
-            ));
+            let text = k
+                .map(|f| format!("{f:?} dmg dealt").to_lowercase())
+                .unwrap_or("hit".into());
+            let v = v
+                .iter()
+                .map(|f| damage_to_text(&f.1).join(&String::from("")))
+                .collect::<Vec<_>>()
+                .join(&String::from(", "));
+            lines.push(format!("\x00on {}, deal {}\x01", text, v));
         }
         lines
     }
@@ -118,6 +150,13 @@ impl Stats {
                 self.damage.insert(*k, self.damage[k] + *v);
             } else {
                 self.damage.insert(*k, *v);
+            }
+        }
+        for (k, v) in &other.on_hit_effects {
+            if let Some(value) = self.on_hit_effects.get_mut(k) {
+                value.append(&mut v.clone());
+            } else {
+                self.on_hit_effects.insert(*k, v.clone());
             }
         }
     }

@@ -197,7 +197,7 @@ pub fn get_items() -> Vec<Item> {
             })),
             stats: Stats {
                 attack_delay: 70.0,
-                damage: hashmap!(DamageType::Holy => 5.0),
+                on_hit_effects: hashmap!(None => vec![(projectiles::star_explosion(),hashmap!(DamageType::Holy => 5.0))]),
                 ..Default::default()
             },
             sprite_x: 8.0,

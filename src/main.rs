@@ -263,8 +263,7 @@ impl<'a> Ramble<'a> {
             projectile.speed +=
                 (25.0 * projectile.drag) * (projectile.direction.dot(move_vector).max(0.0));
             self.projectiles.push(projectile);
-            let stats = self.player.stats();
-            self.player.attack_counter = stats.attack_delay;
+            self.player.attack_counter = self.player.stats().attack_delay;
         }
         let mut new_projectiles = Vec::new();
 

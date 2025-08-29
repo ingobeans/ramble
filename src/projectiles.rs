@@ -9,7 +9,7 @@ use crate::{
     player::Stats,
 };
 
-#[derive(Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
 pub enum DamageType {
     Slashing,
     Piercing,
@@ -58,17 +58,23 @@ pub struct Projectile {
     pub life: u16,
     pub lifetime: u16,
     pub hit_enemies: Vec<usize>,
-    pub on_hit: Vec<OnHit>,
     pub stats: Option<Stats>,
 }
 impl Projectile {
     pub fn on_hit(&self) -> Vec<Projectile> {
         let mut new_projectiles = Vec::new();
-        for on_hit in self.on_hit.iter() {
-            match on_hit {
-                OnHit::SummonProjectile(proj, damage) => {
+        let Some(stats) = self.stats.clone() else {
+            return new_projectiles;
+        };
+
+        for (ty, items) in stats.on_hit_effects.into_iter() {
+            for (proj, damage) in items.into_iter() {
+                if ty.is_none_or(|ty| stats.damage.get(&ty).is_some_and(|f| *f > 0.0)) {
                     let mut proj = proj.clone();
-                    proj.stats = self.stats.clone();
+                    proj.stats = Some(Stats {
+                        on_hit_effects: HashMap::new(),
+                        ..self.stats.clone().unwrap()
+                    });
                     if let Some(stats) = &mut proj.stats {
                         stats.damage = damage.clone();
                     }
@@ -117,7 +123,6 @@ pub const BASE_PROJECTILE: Projectile = Projectile {
     stats: None,
     player_owned: false,
     hit_enemies: Vec::new(),
-    on_hit: Vec::new(),
 };
 
 pub fn acid_puddle() -> Projectile {
@@ -195,21 +200,19 @@ pub fn light_ray() -> Projectile {
         ..Default::default()
     }
 }
-pub fn star_bazooka() -> Projectile {
-    let star_explosion = Projectile {
+pub fn star_explosion() -> Projectile {
+    Projectile {
         speed: 0.0,
         lifetime: 15,
         draw_type: DrawType::Particle(&particles::STAR_EXPLOSION),
         ..Default::default()
-    };
+    }
+}
+pub fn star_bazooka() -> Projectile {
     Projectile {
         speed: 2.0,
         lifetime: 160,
         draw_type: DrawType::Sprite(6.0, 0.0),
-        on_hit: vec![OnHit::SummonProjectile(
-            star_explosion,
-            hashmap!(DamageType::Holy=>0.0),
-        )],
         ..Default::default()
     }
 }
