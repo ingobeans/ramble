@@ -225,3 +225,12 @@ pub fn lance() -> Projectile {
         ..BASE_PROJECTILE
     }
 }
+pub fn razor_dart() -> Projectile {
+    Projectile {
+        speed: 6.0,
+        drag: 0.05,
+        draw_type: DrawType::Sprite(128.0 / 16.0, 0.0),
+        lifetime: 40,
+        ..BASE_PROJECTILE
+    }
+}

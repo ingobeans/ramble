@@ -472,7 +472,8 @@ impl<'a> Ramble<'a> {
         }
     }
     fn draw(&mut self, mouse_x: f32, mouse_y: f32) {
-        // draws
+        // this shouldnt be necessary but for some reason it is
+        COLOR_MOD_MATERIAL.set_uniform("color", COLORS[0]);
         for enemy in self.enemies.iter() {
             enemy.draw(self.assets);
         }

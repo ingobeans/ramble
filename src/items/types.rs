@@ -267,5 +267,30 @@ pub fn get_items() -> Vec<Item> {
             sprite_y: 3.0,
             ..Default::default()
         },
+        Item {
+            name: "toolbelt of rapid fire",
+            ty: ItemType::Talisman,
+            stats: Stats {
+                attack_delay_mod: -0.2,
+                ..Default::default()
+            },
+            sprite_x: 6.0,
+            sprite_y: 3.0,
+            ..Default::default()
+        },
+        Item {
+            name: "razor dart",
+            ty: ItemType::Held(Box::new(Weapon {
+                projectile: projectiles::razor_dart(),
+            })),
+            stats: Stats {
+                attack_delay: 5.0,
+                damage: hashmap!(DamageType::Piercing => 0.5),
+                ..Default::default()
+            },
+            sprite_x: 11.0,
+            sprite_y: 2.0,
+            ..Default::default()
+        },
     ]
 }
