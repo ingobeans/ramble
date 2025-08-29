@@ -1,6 +1,7 @@
 use std::f32::consts::PI;
 
-use macroquad::{miniquad::window::screen_size, prelude::*};
+use hashmap_macro::hashmap;
+use macroquad::{miniquad::window::screen_size, prelude::*, rand::gen_range};
 
 mod assets;
 mod dungeon;
@@ -67,14 +68,7 @@ impl<'a> Ramble<'a> {
         player.chestplate = Some(assets.all_items[0].clone());
 
         Ramble {
-            state: RoundState::Post(
-                0,
-                Some([
-                    assets.all_items[0].clone(),
-                    assets.all_items[0].clone(),
-                    assets.all_items[0].clone(),
-                ]),
-            ),
+            state: RoundState::Post(100, None),
             assets,
             player,
             enemies: Vec::new(),
@@ -88,10 +82,74 @@ impl<'a> Ramble<'a> {
             ui_manager: UiManager::default(),
         }
     }
+    fn give_curse(&mut self, curse: ChaosCurse) {
+        let mut lost_items = Vec::new();
+        match &curse {
+            ChaosCurse::RefillHealth => {
+                self.player.regen();
+            }
+            ChaosCurse::RepairArmor => {
+                self.player.repair_armor();
+            }
+            ChaosCurse::DoubledUnholyDmg => {
+                self.player.internal_stats.merge(&Stats {
+                    damage_modifiers: hashmap!(DamageType::Unholy=>1.0),
+                    ..Default::default()
+                });
+            }
+            ChaosCurse::HalvedHolyDmg => {
+                self.player.internal_stats.merge(&Stats {
+                    damage_modifiers: hashmap!(DamageType::Holy=>-0.5),
+                    ..Default::default()
+                });
+            }
+            ChaosCurse::Gift => {
+                let item = select_random(&self.assets.all_items).clone();
+                if self.player.inv_slot_free() {
+                    self.player.give_item(item);
+                } else {
+                    let pos =
+                        self.player.pos + Vec2::from_angle(rand::gen_range(0.0, PI * 2.0)) * 5.0;
+                    self.dropped_items.push((pos, item));
+                }
+            }
+            _ => {}
+        }
+        self.player.curses.push(curse);
+        let inventory_curse_count = self
+            .player
+            .curses
+            .iter()
+            .filter(|f| matches!(*f, ChaosCurse::LessInventory))
+            .count();
+
+        for (index, item) in self.player.inventory.iter_mut().enumerate() {
+            if index < inventory_curse_count * 2
+                && let Some(item) = item.take()
+            {
+                lost_items.push(item);
+            }
+        }
+        for item in lost_items.into_iter() {
+            if self.player.inv_slot_free() {
+                self.player.give_item(item);
+            } else {
+                let pos = self.player.pos + Vec2::from_angle(rand::gen_range(0.0, PI * 2.0)) * 5.0;
+                self.dropped_items.push((pos, item));
+            }
+        }
+    }
     fn spawn_enemies(&mut self, buffer: &mut Vec<Enemy>) {
+        let shield_count = self
+            .player
+            .curses
+            .iter()
+            .filter(|f| matches!(*f, ChaosCurse::EnemyShields))
+            .count();
         for mut enemy in buffer.drain(..) {
             enemy.id = self.enemy_id;
             enemy.pos.y += 32.0;
+            enemy.shield = shield_count as f32 * 5.0;
             self.enemy_id += 1;
             self.enemies.push(enemy);
         }
@@ -123,6 +181,44 @@ impl<'a> Ramble<'a> {
             self.enemies.clear();
             self.projectiles.clear();
             self.spawn_enemies(&mut self.dungeon_manager.spawn_room());
+            let mut extra_enemies = Vec::new();
+            for curse in self.player.curses.iter() {
+                match *curse {
+                    ChaosCurse::AcidPuddles => {
+                        for _ in 0..2 {
+                            let mut new = acid_puddle();
+                            new.pos = Vec2::new(
+                                rand::gen_range(bottom_left_corner.x, top_right_corner.x),
+                                rand::gen_range(bottom_left_corner.y + 48.0, top_right_corner.y),
+                            );
+                            self.projectiles.push(new);
+                        }
+                    }
+                    ChaosCurse::BonusEnemies => {
+                        let (types, amt) = if rand::gen_range(0, 100) < 50 {
+                            (&self.dungeon_manager.world.other, 2)
+                        } else {
+                            (&self.dungeon_manager.world.miniboss, 1)
+                        };
+                        for _ in 0..amt {
+                            let enemy = Enemy::new(
+                                select_random(&types),
+                                Vec2::new(
+                                    rand::gen_range(bottom_left_corner.x, top_right_corner.x),
+                                    rand::gen_range(
+                                        bottom_left_corner.y + 48.0,
+                                        top_right_corner.y,
+                                    ),
+                                ),
+                                0,
+                            );
+                            extra_enemies.push(enemy);
+                        }
+                    }
+                    _ => {}
+                }
+            }
+            self.spawn_enemies(&mut extra_enemies);
             self.dungeon_manager.room_index += 1;
             self.state = RoundState::Pre(0);
         }
@@ -189,7 +285,11 @@ impl<'a> Ramble<'a> {
                             if let Some(modifier) = self.player.stats().damage_modifiers.get(&k) {
                                 amt *= 1.0 + modifier;
                             }
-                            enemy.health -= amt;
+                            if enemy.shield > 0.0 {
+                                enemy.shield = (enemy.shield - amt).max(0.0);
+                            } else {
+                                enemy.health -= amt;
+                            }
                         }
                         enemy.damage_frames = 5;
                         new_projectiles.append(&mut projectile.on_hit());
@@ -338,6 +438,7 @@ impl<'a> Ramble<'a> {
         if let RoundState::Active = self.state
             && self.enemies.is_empty()
         {
+            self.projectiles.retain(|f| f.player_owned);
             self.state = RoundState::Post(
                 0,
                 Some(std::array::from_fn(|_| {
@@ -405,7 +506,7 @@ impl<'a> Ramble<'a> {
             projectile.draw(self.assets);
         }
     }
-    fn show_item_altars(&mut self) {
+    fn handle_item_shop(&mut self) {
         if let RoundState::Post(frame, items) = &mut self.state {
             if *frame <= 40 {
                 let y = 88.0;
@@ -444,7 +545,12 @@ impl<'a> Ramble<'a> {
                                         let o = items.take().unwrap();
                                         self.player
                                             .give_item(o.into_iter().skip(index).next().unwrap());
-                                        *frame += 1;
+                                        let all =
+                                            enum_iterator::all::<ChaosCurse>().collect::<Vec<_>>();
+                                        let item = *select_random(&all);
+                                        *frame = 41;
+                                        self.give_curse(item);
+                                        return;
                                     }
                                 } else {
                                     ui::draw_tooltip("inventory full", self.assets);
@@ -563,13 +669,13 @@ impl<'a> Ramble<'a> {
             }
 
             if self.player.pos.y > 94.0 {
-                self.show_item_altars()
+                self.handle_item_shop()
             }
             if self.state.should_draw() {
                 self.draw(mouse_x, mouse_y);
             }
             if self.player.pos.y <= 94.0 {
-                self.show_item_altars()
+                self.handle_item_shop()
             }
             self.draw_ui(mouse_x, mouse_y);
 

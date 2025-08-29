@@ -25,6 +25,23 @@ pub fn select_random<T>(items: &[T]) -> &T {
     &items[rand::gen_range(0, items.len())]
 }
 
+pub fn replace_pascal_case(text: &str) -> String {
+    let mut new = String::new();
+    let mut first = true;
+    for char in text.chars() {
+        if char.is_uppercase() {
+            if !first {
+                new.push(' ');
+            }
+            first = false;
+            new.push_str(&char.to_lowercase().to_string());
+        } else {
+            new.push(char);
+        }
+    }
+    new
+}
+
 pub static COLORS: &[Vec4] = &[
     Vec4::new(1.0, 1.0, 1.0, 1.0),
     Vec4::new(0.0, 0.0, 0.0, 1.0),

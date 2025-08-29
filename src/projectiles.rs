@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, u16};
 
 use hashmap_macro::hashmap;
 use macroquad::prelude::*;
@@ -119,6 +119,15 @@ pub const BASE_PROJECTILE: Projectile = Projectile {
     hit_enemies: Vec::new(),
     on_hit: Vec::new(),
 };
+
+pub fn acid_puddle() -> Projectile {
+    Projectile {
+        speed: 0.0,
+        draw_type: DrawType::Particle(&particles::ACID_PUDDLE),
+        lifetime: u16::MAX,
+        ..BASE_PROJECTILE
+    }
+}
 
 pub fn slash() -> Projectile {
     Projectile {

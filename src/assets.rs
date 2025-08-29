@@ -15,6 +15,7 @@ pub struct Assets {
     pub particles: Spritesheet,
     pub ui: Spritesheet,
     pub world: Spritesheet,
+    pub curses: Spritesheet,
     font: Spritesheet,
 }
 impl Default for Assets {
@@ -39,6 +40,10 @@ impl Default for Assets {
             world: Spritesheet::new(
                 load_ase_texture(include_bytes!("../assets/world.ase"), None),
                 16.0,
+            ),
+            curses: Spritesheet::new(
+                load_ase_texture(include_bytes!("../assets/curses.ase"), None),
+                8.0,
             ),
             font: Spritesheet::new(
                 load_ase_texture(include_bytes!("../assets/font.ase"), None),

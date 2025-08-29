@@ -1,9 +1,11 @@
+use std::mem::discriminant;
+
 use macroquad::prelude::*;
 
 use crate::{
     assets::Assets,
     items::{Item, ItemType},
-    player::Player,
+    player::{ChaosCurse, Player},
     utils::*,
 };
 
@@ -110,13 +112,20 @@ impl UiManager {
                     assets.items.draw_sprite(sx + 6.0, sy + 6.0, 0.0, 3.0, None);
                 }
             }
+            let inventory_curse_count = player
+                .curses
+                .iter()
+                .filter(|f| matches!(*f, ChaosCurse::LessInventory))
+                .count();
 
             // inventory
             for (index, slot) in player.inventory.iter_mut().enumerate() {
                 let sx = x + 2.0 + (12.0 + 2.0) * index as f32;
                 let sy = y + height - 2.0 - 12.0;
                 draw_ui_rect(sx, sy, 12.0, 12.0);
-                if draw_slot(slot.as_ref(), sx, sy, mouse_x, mouse_y, assets) {
+                if index < inventory_curse_count * 2 {
+                    draw_line(sx + 12.0, sy, sx, sy + 12.0, 1.0, Color::from_hex(0xda2424));
+                } else if draw_slot(slot.as_ref(), sx, sy, mouse_x, mouse_y, assets) {
                     hovered = Some(slot)
                 }
             }
@@ -150,6 +159,23 @@ impl UiManager {
                 }
             }
         }
+
+        let width = 19.0 * 4.0 + 8.0 + 4.0;
+        let height = 12.0;
+        for (index, curse) in player.curses.iter().rev().enumerate() {
+            let x = SCREEN_WIDTH - width;
+            let y = index as f32 * (height - 1.0);
+            draw_ui_rect(x, y, width, height);
+            assets
+                .curses
+                .draw_sprite(x + 4.0 + 2.0, y + 4.0 + 2.0, *curse as u8 as f32, 0.0, None);
+            assets.draw_text(
+                &replace_pascal_case(&format!("{curse:?}")),
+                x + 4.0 + 8.0,
+                y + 4.0,
+            );
+        }
+
         None
     }
 }

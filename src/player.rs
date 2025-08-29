@@ -1,11 +1,7 @@
 use std::collections::HashMap;
 
-use crate::{
-    assets::Assets,
-    items::{Item, ItemType},
-    projectiles::DamageType,
-    utils::*,
-};
+use crate::{assets::Assets, items::Item, projectiles::DamageType, utils::*};
+use enum_iterator::Sequence;
 use macroquad::prelude::*;
 use struct_iterable::Iterable;
 
@@ -24,6 +20,19 @@ pub fn get_movement_vector() -> Vec2 {
         move_vector.y += 1.0
     }
     move_vector.try_normalize().unwrap_or(Vec2::ZERO)
+}
+
+#[derive(Clone, Copy, Debug, Sequence)]
+pub enum ChaosCurse {
+    EnemyShields,
+    AcidPuddles,
+    LessInventory,
+    BonusEnemies,
+    RefillHealth,
+    HalvedHolyDmg,
+    DoubledUnholyDmg,
+    Gift,
+    RepairArmor,
 }
 
 #[derive(Default, Clone, Iterable)]
@@ -122,7 +131,8 @@ impl Stats {
 #[derive(Default)]
 pub struct Player {
     pub pos: Vec2,
-    stats: Stats,
+    pub internal_stats: Stats,
+    pub curses: Vec<ChaosCurse>,
     pub inventory: Vec<Option<Item>>,
     pub talismans: Vec<Option<Item>>,
     pub helmet: Option<Item>,
@@ -143,7 +153,7 @@ impl Player {
             pos,
             inventory: vec![None; INV_SLOTS],
             talismans: vec![None; 3],
-            stats: Stats {
+            internal_stats: Stats {
                 max_lives: 3,
                 lives: 3,
                 move_speed: 1.5,
@@ -153,9 +163,24 @@ impl Player {
             ..Default::default()
         }
     }
+    pub fn regen(&mut self) {
+        self.internal_stats.lives = self.internal_stats.max_lives;
+    }
+    pub fn repair_armor(&mut self) {
+        for armor in [&mut self.chestplate, &mut self.helmet] {
+            if let Some(armor) = armor {
+                armor.stats.lives = armor.stats.max_lives;
+            }
+        }
+    }
     /// Panics if inventory full
     pub fn give_item(&mut self, item: Item) {
-        for slot in self.inventory.iter_mut() {
+        let inventory_curse_count = self
+            .curses
+            .iter()
+            .filter(|f| matches!(*f, ChaosCurse::LessInventory))
+            .count();
+        for slot in self.inventory.iter_mut().skip(inventory_curse_count * 2) {
             if slot.is_none() {
                 *slot = Some(item);
                 return;
@@ -164,7 +189,12 @@ impl Player {
         panic!("Inventory full!");
     }
     pub fn inv_slot_free(&self) -> bool {
-        for slot in self.inventory.iter() {
+        let inventory_curse_count = self
+            .curses
+            .iter()
+            .filter(|f| matches!(*f, ChaosCurse::LessInventory))
+            .count();
+        for slot in self.inventory.iter().skip(inventory_curse_count * 2) {
             if slot.is_none() {
                 return true;
             }
@@ -172,7 +202,7 @@ impl Player {
         false
     }
     pub fn stats(&self) -> Stats {
-        let mut stats = self.stats.clone();
+        let mut stats = self.internal_stats.clone();
 
         for item in [&self.helmet, &self.chestplate, &self.hand]
             .into_iter()
@@ -198,8 +228,8 @@ impl Player {
             }
         }
 
-        self.stats.lives -= 1;
-        if self.stats.lives == 0 {
+        self.internal_stats.lives -= 1;
+        if self.internal_stats.lives == 0 {
             todo!("game over!");
         }
     }

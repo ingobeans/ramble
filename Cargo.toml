@@ -1,6 +1,6 @@
 [package]
 name = "ramble"
-version = "0.5.1"
+version = "0.6.0"
 edition = "2024"
 
 [dependencies]
@@ -9,3 +9,4 @@ macroquad = "0.4.14"
 image = "0.24.9"
 hashmap_macro = "0.1.0"
 struct_iterable = "0.1.1"
+enum-iterator = "2.1.0"

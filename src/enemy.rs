@@ -69,6 +69,7 @@ pub struct Enemy {
     pub damage_frames: u8,
     pub attack_counter: u8,
     pub phase_index: usize,
+    pub shield: f32,
     /// Used only when the current phase's end condition is [PhaseEndCondition::Frames]
     pub phase_frame_counter: u32,
 }
@@ -90,6 +91,7 @@ impl Enemy {
             damage_frames: 0,
             attack_counter: rand::gen_range(0, firing_delay),
             phase_index: 0,
+            shield: 0.0,
             phase_frame_counter: 0,
         }
     }
@@ -116,6 +118,12 @@ impl Enemy {
             Some(&draw_params),
         );
         gl_use_default_material();
+        // draw shield
+        if self.shield > 0.0 {
+            draw_circle_lines(self.pos.x, self.pos.y, 8.0, 1.0, Color::from_hex(0x5ee9e9));
+            draw_circle_lines(self.pos.x, self.pos.y, 7.0, 1.0, Color::from_hex(0x2890dc));
+        }
+
         // draw health bar
         let width = 12.0;
         let start_x = x - 8.0 + (16.0 - width) / 2.0;
@@ -124,9 +132,16 @@ impl Enemy {
         draw_rectangle(
             start_x,
             start_y,
-            self.health / self.ty.max_health * width,
+            self.health / (self.ty.max_health + self.shield) * width,
             3.0,
             Color::from_hex(0x47f641),
+        );
+        draw_rectangle(
+            start_x + self.health / (self.ty.max_health + self.shield) * width,
+            start_y,
+            self.shield / (self.ty.max_health + self.shield) * width,
+            3.0,
+            Color::from_hex(0x2890dc),
         );
     }
 }
