@@ -90,13 +90,13 @@ pub fn get_items() -> Vec<Item> {
             ..Default::default()
         },
         Item {
-            name: "ice wand",
+            name: "icicle wand",
             ty: ItemType::Held(Box::new(Weapon {
                 projectile: projectiles::icicle(),
             })),
             stats: Stats {
                 attack_delay: 30.0,
-                damage: hashmap!(DamageType::Ice => 5.0),
+                damage: hashmap!(DamageType::Piercing => 5.0),
                 ..Default::default()
             },
             sprite_x: 5.0,
@@ -213,6 +213,57 @@ pub fn get_items() -> Vec<Item> {
                 ..Default::default()
             },
             sprite_x: 1.0,
+            sprite_y: 3.0,
+            ..Default::default()
+        },
+        Item {
+            name: "fire necklace",
+            ty: ItemType::Talisman,
+            stats: Stats {
+                on_hit_effects: hashmap![Some(DamageType::Fire) => vec![(projectiles::fire(),hashmap!(DamageType::Fire => 2.0))]],
+                ..Default::default()
+            },
+            sprite_x: 4.0,
+            sprite_y: 3.0,
+            ..Default::default()
+        },
+        Item {
+            name: "book of fireballs",
+            ty: ItemType::Held(Box::new(Weapon {
+                projectile: projectiles::fireball(),
+            })),
+            stats: Stats {
+                attack_delay: 30.0,
+                damage: hashmap!(DamageType::Fire => 4.0),
+                ..Default::default()
+            },
+            sprite_x: 9.0,
+            sprite_y: 2.0,
+            ..Default::default()
+        },
+        Item {
+            name: "lance",
+            ty: ItemType::Held(Box::new(Weapon {
+                projectile: projectiles::lance(),
+            })),
+            stats: Stats {
+                attack_delay: 50.0,
+                damage: hashmap!(DamageType::Piercing =>4.0),
+                ..Default::default()
+            },
+            sprite_x: 10.0,
+            sprite_y: 2.0,
+            ..Default::default()
+        },
+        Item {
+            name: "pendant of swiftness",
+            ty: ItemType::Talisman,
+            stats: Stats {
+                move_speed_mod: 0.2,
+                roll_delay_mod: -0.2,
+                ..Default::default()
+            },
+            sprite_x: 2.0,
             sprite_y: 3.0,
             ..Default::default()
         },

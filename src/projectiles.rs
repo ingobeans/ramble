@@ -1,6 +1,5 @@
 use std::{collections::HashMap, u16};
 
-use hashmap_macro::hashmap;
 use macroquad::prelude::*;
 
 use crate::{
@@ -14,7 +13,6 @@ pub enum DamageType {
     Slashing,
     Piercing,
     Fire,
-    Ice,
     Unholy,
     Holy,
 }
@@ -24,7 +22,6 @@ impl DamageType {
             DamageType::Slashing => "slashing",
             DamageType::Piercing => "piercing",
             DamageType::Fire => "fire",
-            DamageType::Ice => "ice",
             DamageType::Unholy => "unholy",
             DamageType::Holy => "holy",
         }
@@ -209,5 +206,22 @@ pub fn star_bazooka() -> Projectile {
         lifetime: 160,
         draw_type: DrawType::Sprite(6.0, 0.0),
         ..Default::default()
+    }
+}
+pub fn fire() -> Projectile {
+    Projectile {
+        speed: 0.0,
+        lifetime: 15,
+        draw_type: DrawType::Particle(&particles::FIRE),
+        ..Default::default()
+    }
+}
+pub fn lance() -> Projectile {
+    Projectile {
+        speed: 12.0,
+        drag: 0.25,
+        draw_type: DrawType::Sprite(112.0 / 16.0, 0.0),
+        lifetime: 20,
+        ..BASE_PROJECTILE
     }
 }

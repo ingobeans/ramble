@@ -578,10 +578,11 @@ impl<'a> Ramble<'a> {
         };
         let mut last = get_time();
         for (index, item) in self.assets.all_items.clone().into_iter().enumerate() {
+            let w = ((SCREEN_WIDTH - 40.0) / 14.0).floor();
             self.dropped_items.push((
                 Vec2::new(
-                    (index as f32 * 14.0 + 20.0) % (SCREEN_WIDTH - 20.0),
-                    (index as f32 * 14.0) / (SCREEN_WIDTH - 20.0) + 48.0,
+                    20.0 + ((index as f32) % w).floor() * 14.0,
+                    ((index as f32) / w).floor() * 14.0 + 48.0,
                 ),
                 item,
             ));

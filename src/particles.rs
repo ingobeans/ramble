@@ -29,3 +29,9 @@ pub static ACID_PUDDLE: Particle = &|ctx, assets| {
         Color::from_hex(0x47f641),
     );
 };
+pub static FIRE: Particle = &|ctx, assets| {
+    let anim = (ctx.life as f32 / 15.0 * 3.0).floor();
+    assets
+        .particles
+        .draw_sprite(ctx.pos.x, ctx.pos.y, 3.0 + anim, 48.0 / 16.0, None);
+};

@@ -125,8 +125,8 @@ impl Stats {
                 .iter()
                 .map(|f| damage_to_text(&f.1).join(&String::from("")))
                 .collect::<Vec<_>>()
-                .join(&String::from(", "));
-            lines.push(format!("\x00on {}, deal {}\x01", text, v));
+                .join(&String::from("\n& "));
+            lines.push(format!("\x01on \x00{}\x01, deal:\n {}\x01", text, v));
         }
         lines
     }
