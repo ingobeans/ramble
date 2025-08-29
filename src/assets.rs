@@ -110,7 +110,7 @@ fn load_ase_texture(bytes: &[u8], layer: Option<u32>) -> Texture2D {
 
 pub struct Spritesheet {
     texture: Texture2D,
-    sprite_size: f32,
+    pub sprite_size: f32,
 }
 impl Spritesheet {
     pub fn new(texture: Texture2D, sprite_size: f32) -> Self {

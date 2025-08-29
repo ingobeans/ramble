@@ -20,7 +20,7 @@ pub static WORLD_FOREST: LazyLock<World> = LazyLock::new(|| {
                     end: PhaseEndCondition::None,
                     frames: 2,
                 }],
-                max_health: 2.0,
+                max_health: 5.0,
             },
             // mini hood
             EnemyType {
@@ -33,7 +33,7 @@ pub static WORLD_FOREST: LazyLock<World> = LazyLock::new(|| {
                     end: PhaseEndCondition::None,
                     frames: 2,
                 }],
-                max_health: 2.0,
+                max_health: 5.0,
             },
         ],
         heavy: vec![
@@ -61,7 +61,7 @@ pub static WORLD_FOREST: LazyLock<World> = LazyLock::new(|| {
                     end: PhaseEndCondition::None,
                     frames: 2,
                 }],
-                max_health: 25.0,
+                max_health: 20.0,
             },
         ],
         ranged: vec![EnemyType {
@@ -75,7 +75,7 @@ pub static WORLD_FOREST: LazyLock<World> = LazyLock::new(|| {
                 end: PhaseEndCondition::None,
                 frames: 2,
             }],
-            max_health: 5.0,
+            max_health: 6.0,
         }],
         other: vec![EnemyType {
             // red hooded fireball shooter
@@ -88,7 +88,7 @@ pub static WORLD_FOREST: LazyLock<World> = LazyLock::new(|| {
                 end: PhaseEndCondition::None,
                 frames: 1,
             }],
-            max_health: 5.0,
+            max_health: 6.0,
         }],
         miniboss: vec![EnemyType {
             speed: 2.5,

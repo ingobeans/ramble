@@ -49,7 +49,7 @@ impl RoundState {
     }
 }
 struct Ramble<'a> {
-    assets: &'a Assets,
+    assets: &'a mut Assets,
     player: Player,
     state: RoundState,
     enemies: Vec<Enemy>,
@@ -60,16 +60,23 @@ struct Ramble<'a> {
     ui_manager: UiManager,
 }
 impl<'a> Ramble<'a> {
-    fn new(assets: &'a Assets) -> Self {
+    fn new(assets: &'a mut Assets) -> Self {
         let mut player = Player::new(Vec2::new(SCREEN_WIDTH / 2.0, SCREEN_HEIGHT / 2.0));
         player.hand = Some(assets.all_items[3].clone());
         player.helmet = Some(assets.all_items[1].clone());
         player.chestplate = Some(assets.all_items[0].clone());
 
         Ramble {
+            state: RoundState::Post(
+                0,
+                Some([
+                    assets.all_items[0].clone(),
+                    assets.all_items[0].clone(),
+                    assets.all_items[0].clone(),
+                ]),
+            ),
             assets,
             player,
-            state: RoundState::Post(0, None),
             enemies: Vec::new(),
             dropped_items: Vec::new(),
             enemy_id: 0,
@@ -400,51 +407,58 @@ impl<'a> Ramble<'a> {
     }
     fn show_item_altars(&mut self) {
         if let RoundState::Post(frame, items) = &mut self.state {
-            let top_positions = [
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                Some(1),
-                Some(4),
-                Some(6),
-                Some(8),
-            ];
-            let padding = 80.0;
-            let gap = (SCREEN_WIDTH - padding * 2.0) / 2.0;
-            let y = 88.0;
-            let anim =
-                ((*frame as f32 / 30.0).min(1.0) * (top_positions.len() as f32 - 1.0)).floor();
-            for index in 0..3 {
-                let x = padding + index as f32 * gap;
-                self.assets.world.draw_sprite(x, y, anim, 1.0, None);
+            if *frame <= 40 {
+                let y = 88.0;
+                let anim = (*frame as f32 / 30.0).min(1.0);
+                let x = SCREEN_WIDTH / 2.0;
+                draw_ellipse(x, y + 20.0, anim * 48.0, anim * 16.0, 0.0, BLACK);
+                if *frame > 30 {
+                    let y = y + 14.0 - (*frame - 30) as f32 / 10.0 * 14.0;
+                    self.assets.world.sprite_size = 96.0;
+                    self.assets.world.draw_sprite(x, y, 0.0, 1.0, None);
+                    self.assets.world.sprite_size = 16.0;
+                    for index in 0..3 {
+                        let x = x - 32.0 + 16.0 * index as f32;
 
-                if let Some(item) = items.as_ref().map(|f| &f[index]) {
-                    if let Some(pos) = top_positions[anim as usize] {
-                        ui::draw_slot(
-                            Some(item),
-                            x + 2.0 - 8.0,
-                            y - 4.0 - pos as f32,
-                            0.0,
-                            0.0,
-                            self.assets,
-                        );
-                    }
-                    if self.player.pos.distance(Vec2::new(x, y)) <= 16.0 {
-                        if self.player.inv_slot_free() {
-                            ui::draw_tooltip("press e to choose this reward", self.assets);
-                            if is_key_pressed(KeyCode::E) {
-                                let o = items.take().unwrap();
-                                self.player
-                                    .give_item(o.into_iter().skip(index).next().unwrap());
+                        if let Some(item) = items.as_ref().map(|f| &f[index]) {
+                            ui::draw_slot(
+                                Some(item),
+                                x + 2.0 - 8.0,
+                                y + 1.0,
+                                0.0,
+                                0.0,
+                                self.assets,
+                            );
+
+                            // check for distance with a bias against X coordinate
+                            if (self.player.pos.x - x).powi(2) * 3.0
+                                + (self.player.pos.y - y).powi(2)
+                                <= 18.0_f32.powi(2)
+                            {
+                                if self.player.inv_slot_free() {
+                                    ui::draw_tooltip(
+                                        "press e to deal with the chaos demon for this item",
+                                        self.assets,
+                                    );
+                                    if is_key_pressed(KeyCode::E) {
+                                        let o = items.take().unwrap();
+                                        self.player
+                                            .give_item(o.into_iter().skip(index).next().unwrap());
+                                        *frame += 1;
+                                    }
+                                } else {
+                                    ui::draw_tooltip("inventory full", self.assets);
+                                }
                             }
-                        } else {
-                            ui::draw_tooltip("inventory full", self.assets);
                         }
                     }
                 }
+            } else {
+                let y = 88.0;
+                let frame = *frame - 40;
+                let anim = ((30.0 - frame as f32) / 30.0).max(0.0);
+                let x = SCREEN_WIDTH / 2.0;
+                draw_ellipse(x, y + 20.0, anim * 48.0, anim * 16.0, 0.0, BLACK);
             }
         }
     }
@@ -524,7 +538,9 @@ impl<'a> Ramble<'a> {
                         self.update(mouse_x, mouse_y);
                     }
                     RoundState::Post(frame, _) => {
-                        *frame = frame.saturating_add(1);
+                        if *frame != 40 {
+                            *frame = frame.saturating_add(1);
+                        }
                         self.update(mouse_x, mouse_y);
                     }
                     RoundState::Pre(frame) => {
@@ -546,13 +562,13 @@ impl<'a> Ramble<'a> {
                 }
             }
 
-            if self.player.pos.y > 88.0 {
+            if self.player.pos.y > 94.0 {
                 self.show_item_altars()
             }
             if self.state.should_draw() {
                 self.draw(mouse_x, mouse_y);
             }
-            if self.player.pos.y <= 88.0 {
+            if self.player.pos.y <= 94.0 {
                 self.show_item_altars()
             }
             self.draw_ui(mouse_x, mouse_y);
@@ -587,7 +603,7 @@ fn window_conf() -> Conf {
 #[macroquad::main(window_conf)]
 async fn main() {
     rand::srand(macroquad::miniquad::date::now() as _);
-    let assets = Assets::default();
-    let mut ramble = Ramble::new(&assets);
+    let mut assets = Assets::default();
+    let mut ramble = Ramble::new(&mut assets);
     ramble.run().await;
 }

@@ -169,7 +169,7 @@ pub fn get_items() -> Vec<Item> {
             })),
             stats: Stats {
                 attack_delay: 30.0,
-                damage: hashmap!(DamageType::Unholy => 9.0),
+                damage: hashmap!(DamageType::Unholy => 4.0),
                 ..Default::default()
             },
             sprite_x: 6.0,
@@ -183,7 +183,7 @@ pub fn get_items() -> Vec<Item> {
             })),
             stats: Stats {
                 attack_delay: 15.0,
-                damage: hashmap!(DamageType::Holy => 2.5),
+                damage: hashmap!(DamageType::Holy => 2.0),
                 ..Default::default()
             },
             sprite_x: 7.0,
