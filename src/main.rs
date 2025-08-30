@@ -50,7 +50,7 @@ impl RoundState {
     }
 }
 struct Ramble<'a> {
-    assets: &'a mut Assets,
+    assets: &'a Assets,
     player: Player,
     state: RoundState,
     enemies: Vec<Enemy>,
@@ -61,13 +61,7 @@ struct Ramble<'a> {
     ui_manager: UiManager,
 }
 impl<'a> Ramble<'a> {
-    fn new(assets: &'a mut Assets) -> Self {
-        let mut player = Player::new(Vec2::new(SCREEN_WIDTH / 2.0, SCREEN_HEIGHT / 2.0));
-        player.hand = Some(assets.all_items[3].clone());
-        player.helmet = Some(assets.all_items[1].clone());
-        player.chestplate = Some(assets.all_items[0].clone());
-        //player.hand.as_mut().unwrap().enchantment = Some(assets.all_enchantments[0].clone());
-
+    fn new(assets: &'a Assets, player: Player) -> Self {
         Ramble {
             state: RoundState::Post(100, None),
             assets,
@@ -540,9 +534,7 @@ impl<'a> Ramble<'a> {
                 draw_ellipse(x, y + 20.0, anim * 48.0, anim * 16.0, 0.0, BLACK);
                 if *frame > 30 {
                     let y = y + 14.0 - (*frame - 30) as f32 / 10.0 * 14.0;
-                    self.assets.world.sprite_size = 96.0;
                     self.assets.world.draw_sprite(x, y, 0.0, 1.0, None);
-                    self.assets.world.sprite_size = 16.0;
                     for index in 0..3 {
                         let x = x - 32.0 + 16.0 * index as f32;
 
@@ -594,24 +586,21 @@ impl<'a> Ramble<'a> {
         }
     }
     async fn run(&mut self) {
-        let rt = render_target(SCREEN_WIDTH as u32, SCREEN_HEIGHT as u32);
-        rt.texture.set_filter(FilterMode::Nearest);
-        let mut world_camera = Camera2D {
-            render_target: Some(rt),
-            zoom: Vec2::new(1.0 / SCREEN_WIDTH * 2.0, 1.0 / SCREEN_HEIGHT * 2.0),
-            target: Vec2::new(SCREEN_WIDTH / 2.0, SCREEN_HEIGHT / 2.0),
-            ..Default::default()
-        };
+        let mut world_camera = create_camera(SCREEN_WIDTH, SCREEN_HEIGHT);
         let mut last = get_time();
-        for (index, item) in self.assets.all_items.clone().into_iter().enumerate() {
-            let w = ((SCREEN_WIDTH - 40.0) / 14.0).floor();
-            self.dropped_items.push((
-                Vec2::new(
-                    20.0 + ((index as f32) % w).floor() * 14.0,
-                    ((index as f32) / w).floor() * 14.0 + 48.0,
-                ),
-                item,
-            ));
+
+        #[cfg(debug_assertions)]
+        {
+            for (index, item) in self.assets.all_items.clone().into_iter().enumerate() {
+                let w = ((SCREEN_WIDTH - 40.0) / 14.0).floor();
+                self.dropped_items.push((
+                    Vec2::new(
+                        20.0 + ((index as f32) % w).floor() * 14.0,
+                        ((index as f32) / w).floor() * 14.0 + 48.0,
+                    ),
+                    item,
+                ));
+            }
         }
 
         loop {
@@ -627,14 +616,8 @@ impl<'a> Ramble<'a> {
             // set up UI camera
             let ui_width = screen_width / scale_factor;
             let ui_height = screen_height / scale_factor;
-            let rt = render_target(ui_width as u32, ui_height as u32);
-            rt.texture.set_filter(FilterMode::Nearest);
-            let ui_camera = Camera2D {
-                render_target: Some(rt),
-                zoom: Vec2::new(1.0 / ui_width * 2.0, 1.0 / ui_height * 2.0),
-                target: Vec2::new(ui_width / 2.0, ui_height / 2.0),
-                ..Default::default()
-            };
+
+            let ui_camera = create_camera(ui_width, ui_height);
 
             clear_background(
                 self.dungeon_manager.worlds[self.dungeon_manager.world_index].background_color,
@@ -752,6 +735,9 @@ impl<'a> Ramble<'a> {
         }
     }
 }
+
+type Class = (&'static str, Option<Item>, Option<Item>, Option<Item>);
+
 fn window_conf() -> Conf {
     Conf {
         window_title: "ramble".to_string(),
@@ -762,8 +748,148 @@ fn window_conf() -> Conf {
 }
 #[macroquad::main(window_conf)]
 async fn main() {
+    // seed random
     rand::srand(macroquad::miniquad::date::now() as _);
-    let mut assets = Assets::default();
-    let mut ramble = Ramble::new(&mut assets);
-    ramble.run().await;
+
+    // define assets and classes
+    let assets = Assets::default();
+    let classes: Vec<Class> = vec![
+        (
+            "warrior",
+            Some(assets.get_item_by_name("longsword").clone()),
+            None,
+            Some(assets.get_item_by_name("chainmail").clone()),
+        ),
+        (
+            "sorcerer",
+            Some(assets.get_item_by_name("light ray").clone()),
+            None,
+            Some(assets.get_item_by_name("wizards robes").clone()),
+        ),
+        (
+            "archer",
+            Some(assets.get_item_by_name("bow").clone()),
+            Some(assets.get_item_by_name("archers hood").clone()),
+            Some(assets.get_item_by_name("leather tunic").clone()),
+        ),
+    ];
+    let mut class_index: usize = 0;
+
+    // main menu
+    let camera = create_camera(SCREEN_WIDTH, SCREEN_HEIGHT);
+    loop {
+        let (screen_width, screen_height) = screen_size();
+        let scale_factor = (screen_width / SCREEN_WIDTH).min(screen_height / SCREEN_HEIGHT);
+        let horizontal_padding = (screen_width - SCREEN_WIDTH * scale_factor) / 2.0;
+        let (mouse_x, mouse_y) = mouse_position();
+        let (mouse_x, mouse_y) = (
+            (mouse_x - horizontal_padding) / scale_factor,
+            mouse_y / scale_factor,
+        );
+        set_camera(&camera);
+        clear_background(Color::from_hex(0x180d2f));
+
+        let scale = 2.0;
+        let width = 3.0 * 16.0;
+        let height = 32.0;
+        let params = DrawTextureParams {
+            source: Some(Rect {
+                x: 0.0,
+                y: 16.0,
+                w: width,
+                h: height,
+            }),
+            dest_size: Some(Vec2::new(width * scale, height * scale)),
+            ..Default::default()
+        };
+        let x = (SCREEN_WIDTH - width * scale) / 2.0;
+        draw_texture_ex(&assets.ui.texture, x, 4.0, WHITE, params);
+
+        let preview_height = 100.0;
+        let preview_y = 6.0 + height * scale;
+        ui::draw_ui_rect(x, preview_y, width * scale, preview_height);
+
+        let mut player = Player::new(Vec2::new(SCREEN_WIDTH / 2.0, SCREEN_HEIGHT / 2.0));
+        let class_name;
+        (class_name, player.hand, player.helmet, player.chestplate) =
+            classes[class_index % classes.len()].clone();
+        assets.draw_text(
+            class_name,
+            x + (width * scale - class_name.chars().count() as f32 * 4.0) / 2.0,
+            preview_y + 4.0,
+        );
+
+        let character_size = 48.0;
+        let params = DrawTextureParams {
+            dest_size: Some(Vec2::new(character_size, character_size)),
+            ..Default::default()
+        };
+        player.draw_character(
+            x + (width * scale - character_size + 16.0) / 2.0,
+            preview_y + 32.0,
+            &assets,
+            0.0,
+            Some(&params),
+        );
+
+        if ui::draw_button(
+            "select and start",
+            &assets,
+            x,
+            SCREEN_HEIGHT - 16.0,
+            width * scale,
+            mouse_x,
+            mouse_y,
+        ) {
+            // run game
+            let mut ramble = Ramble::new(&assets, player);
+            ramble.run().await;
+            class_index = 0;
+            continue;
+        }
+        if ui::draw_button(
+            ")",
+            &assets,
+            x + width * scale + 2.0,
+            preview_y + preview_height / 2.0,
+            6.0,
+            mouse_x,
+            mouse_y,
+        ) {
+            class_index += 1;
+        }
+        if ui::draw_button(
+            "(",
+            &assets,
+            x - 8.0,
+            preview_y + preview_height / 2.0,
+            6.0,
+            mouse_x,
+            mouse_y,
+        ) {
+            if class_index == 0 {
+                class_index = classes.len() - 1;
+            } else {
+                class_index -= 1;
+            }
+        }
+
+        set_default_camera();
+        clear_background(Color::from_hex(0x180d2f));
+
+        draw_texture_ex(
+            &camera.render_target.as_ref().unwrap().texture,
+            horizontal_padding,
+            0.0,
+            WHITE,
+            DrawTextureParams {
+                dest_size: Some(Vec2::new(
+                    SCREEN_WIDTH * scale_factor,
+                    SCREEN_HEIGHT * scale_factor,
+                )),
+                ..Default::default()
+            },
+        );
+        next_frame().await;
+    }
 }

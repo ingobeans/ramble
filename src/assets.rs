@@ -16,6 +16,7 @@ pub struct Assets {
     pub particles: Spritesheet,
     pub ui: Spritesheet,
     pub world: Spritesheet,
+    pub shop: Texture2D,
     pub curses: Spritesheet,
     pub enchantments: Spritesheet,
     font: Spritesheet,
@@ -43,6 +44,7 @@ impl Default for Assets {
                 load_ase_texture(include_bytes!("../assets/world.ase"), None),
                 16.0,
             ),
+            shop: load_ase_texture(include_bytes!("../assets/shop.ase"), None),
             curses: Spritesheet::new(
                 load_ase_texture(include_bytes!("../assets/curses.ase"), None),
                 8.0,
@@ -61,10 +63,19 @@ impl Default for Assets {
     }
 }
 impl Assets {
+    pub fn get_item_by_name(&self, name: &str) -> &Item {
+        for item in self.all_items.iter() {
+            if item.name == name {
+                return item;
+            }
+        }
+        panic!()
+    }
     pub fn draw_text(&self, text: &str, mut x: f32, mut y: f32) -> (f32, f32) {
         let original_x = x;
         let original_y = y;
-        let hardcoded = hashmap!(':'=>36,'.'=>37,'-'=>38,'%'=>39,'+'=>40,'/'=>41,'H'=>42);
+        let hardcoded =
+            hashmap!(':'=>36,'.'=>37,'-'=>38,'%'=>39,'+'=>40,'/'=>41,'H'=>42,'('=>43,')'=>44);
         gl_use_material(&COLOR_MOD_MATERIAL);
         COLOR_MOD_MATERIAL.set_uniform("color", COLORS[1]);
 
@@ -121,7 +132,7 @@ fn load_ase_texture(bytes: &[u8], layer: Option<u32>) -> Texture2D {
 }
 
 pub struct Spritesheet {
-    texture: Texture2D,
+    pub texture: Texture2D,
     pub sprite_size: f32,
 }
 impl Spritesheet {
@@ -139,21 +150,22 @@ impl Spritesheet {
         tile_y: f32,
         params: Option<&DrawTextureParams>,
     ) {
+        let mut p = params.cloned().unwrap_or(DrawTextureParams::default());
+        p.dest_size = p
+            .dest_size
+            .or(Some(Vec2::new(self.sprite_size, self.sprite_size)));
+        p.source = p.source.or(Some(Rect {
+            x: tile_x * self.sprite_size,
+            y: tile_y * self.sprite_size,
+            w: self.sprite_size,
+            h: self.sprite_size,
+        }));
         draw_texture_ex(
             &self.texture,
             screen_x - self.sprite_size / 2.0,
             screen_y - self.sprite_size / 2.0,
             WHITE,
-            DrawTextureParams {
-                dest_size: Some(Vec2::new(self.sprite_size, self.sprite_size)),
-                source: Some(Rect {
-                    x: tile_x * self.sprite_size,
-                    y: tile_y * self.sprite_size,
-                    w: self.sprite_size,
-                    h: self.sprite_size,
-                }),
-                ..params.cloned().unwrap_or(DrawTextureParams::default())
-            },
+            p,
         );
     }
 }

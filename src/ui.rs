@@ -1,5 +1,3 @@
-use std::mem::discriminant;
-
 use macroquad::prelude::*;
 
 use crate::{
@@ -239,7 +237,28 @@ pub fn draw_slot(
     hovered
 }
 
-fn draw_ui_rect(x: f32, y: f32, w: f32, h: f32) {
+pub fn draw_button(
+    text: &str,
+    assets: &Assets,
+    x: f32,
+    y: f32,
+    width: f32,
+    mouse_x: f32,
+    mouse_y: f32,
+) -> bool {
+    let height = 8.0;
+    let hovered = (x..x + width).contains(&mouse_x) && (y..y + height).contains(&mouse_y);
+    let offset_x = ((width - text.chars().count() as f32 * 5.0) / 2.0).floor();
+
+    draw_ui_rect(x, y, width, height);
+    assets.draw_text(text, x + 2.0 + offset_x, y + 2.0);
+    if hovered {
+        draw_rectangle_lines(x, y, width, height, 2.0, Color::from_hex(0x8a4926));
+    }
+    hovered && is_mouse_button_pressed(MouseButton::Left)
+}
+
+pub fn draw_ui_rect(x: f32, y: f32, w: f32, h: f32) {
     draw_rectangle(x, y, w, h, Color::from_hex(0x1e090d));
     draw_rectangle(
         x + 1.0,
