@@ -1,7 +1,7 @@
 use std::f32::consts::PI;
 
 use hashmap_macro::hashmap;
-use macroquad::{miniquad::window::screen_size, prelude::*, rand::gen_range};
+use macroquad::{miniquad::window::screen_size, prelude::*};
 
 mod assets;
 mod dungeon;
@@ -458,21 +458,6 @@ impl<'a> Ramble<'a> {
         }
     }
     fn draw_ui(&mut self, mouse_x: f32, mouse_y: f32) {
-        let max = self.player.stats().max_lives;
-        for i in 0..max {
-            let sprite = if i < self.player.stats().lives {
-                0.0
-            } else {
-                1.0
-            };
-            self.assets.ui.draw_sprite(
-                SCREEN_WIDTH / 2.0 - 8.0 * max as f32 + i as f32 * 16.0 + 8.0,
-                SCREEN_HEIGHT - 8.0,
-                sprite,
-                0.0,
-                None,
-            );
-        }
         if let Some(dropped) =
             self.ui_manager
                 .update(self.assets, &mut self.player, mouse_x, mouse_y)

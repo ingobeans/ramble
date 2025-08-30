@@ -25,6 +25,17 @@ impl UiManager {
         mouse_x: f32,
         mouse_y: f32,
     ) -> Option<Item> {
+        let max = player.stats().max_lives;
+        for i in 0..max {
+            let sprite = if i < player.stats().lives { 0.0 } else { 1.0 };
+            assets.ui.draw_sprite(
+                SCREEN_WIDTH / 2.0 - 8.0 * max as f32 + i as f32 * 16.0 + 8.0,
+                SCREEN_HEIGHT - 8.0,
+                sprite,
+                0.0,
+                None,
+            );
+        }
         if is_key_pressed(KeyCode::Escape) {
             self.inv_open = !self.inv_open;
         }
