@@ -1,4 +1,4 @@
-use std::sync::LazyLock;
+use std::{collections::HashMap, sync::LazyLock};
 
 use hashmap_macro::hashmap;
 use image::{GenericImageView, Rgba};
@@ -10,18 +10,38 @@ use crate::{
 };
 
 pub struct DungeonManager {
-    pub world: &'static World,
-    pub room_index: usize,
+    pub worlds: Vec<&'static World>,
+    pub world_index: usize,
+    room_index: usize,
+    pub total_room_index: usize,
 }
 impl DungeonManager {
-    pub fn spawn_room(&self) -> Vec<Enemy> {
-        let mut types: std::collections::HashMap<EnemyTier, &EnemyType> = hashmap!(
-            EnemyTier::Light => select_random(&self.world.light),
-            EnemyTier::Heavy => select_random(&self.world.heavy),
-            EnemyTier::Ranged =>  select_random(&self.world.ranged)
-        );
+    pub fn new(worlds: Vec<&'static World>) -> Self {
+        Self {
+            worlds,
+            world_index: 0,
+            room_index: 0,
+            total_room_index: 0,
+        }
+    }
+    pub fn spawn_room(&mut self) -> Vec<Enemy> {
+        self.room_index += 1;
+        self.total_room_index += 1;
+        if self.room_index > 12 {
+            self.room_index = 0;
+            self.world_index += 1;
+        }
+        fn get_types(dungeon_manager: &DungeonManager) -> HashMap<EnemyTier, &'static EnemyType> {
+            hashmap!(
+                EnemyTier::Light => select_random(&dungeon_manager.worlds[dungeon_manager.world_index].light),
+                EnemyTier::Heavy => select_random(&dungeon_manager.worlds[dungeon_manager.world_index].heavy),
+                EnemyTier::Ranged =>  select_random(&dungeon_manager.worlds[dungeon_manager.world_index].ranged),
+                EnemyTier::Miniboss => select_random(&dungeon_manager.worlds[dungeon_manager.world_index].miniboss),
+            )
+        }
+        let mut types = get_types(self);
 
-        let layout_group_index = self.room_index.min(12);
+        let layout_group_index = self.room_index;
         let layout_group = &LAYOUTS[layout_group_index];
         let layout = &layout_group[rand::gen_range(0, layout_group.len())];
         let mut enemies = Vec::new();
@@ -33,21 +53,16 @@ impl DungeonManager {
             let x = (index % TILES_WIDTH as usize) as f32 * 16.0 + 8.0;
             let y = (index / TILES_WIDTH as usize) as f32 * 16.0 + 8.0;
             if y != last_row {
-                types = hashmap!(
-                    EnemyTier::Light => select_random(&self.world.light),
-                    EnemyTier::Heavy => select_random(&self.world.heavy),
-                    EnemyTier::Ranged =>  select_random(&self.world.ranged),
-                    EnemyTier::Miniboss => select_random(&self.world.miniboss),
-                );
+                types = get_types(self);
             }
             last_row = y;
             let ty = types[value];
             let enemy = Enemy::new(ty, Vec2::new(x, y), 0);
             enemies.push(enemy);
         }
-        if !self.world.other.is_empty() && rand::gen_range(0, 100) < OTHER_CHANCE {
+        if rand::gen_range(0, 100) < OTHER_CHANCE {
             // spawn an "other" in top left and right corners
-            let ty = select_random(&self.world.other);
+            let ty = select_random(&self.worlds[self.world_index].other);
             let positions = [Vec2::new(8.0, 8.0), Vec2::new(SCREEN_WIDTH - 8.0, 8.0)];
             for position in positions {
                 let enemy = Enemy::new(ty, position, 0);

@@ -76,16 +76,13 @@ impl<'a> Ramble<'a> {
             dropped_items: Vec::new(),
             enemy_id: 0,
             projectiles: Vec::new(),
-            dungeon_manager: DungeonManager {
-                world: &FOREST,
-                room_index: 0,
-            },
+            dungeon_manager: DungeonManager::new(vec![&FOREST, &CRYPT]),
             ui_manager: UiManager::default(),
         }
     }
     fn get_item_reward(&self) -> Item {
         let mut item = select_random(&self.assets.all_items).clone();
-        let room_modifier_index = self.dungeon_manager.room_index / 2;
+        let room_modifier_index = self.dungeon_manager.total_room_index / 2;
         for (_, v) in item.internal_stats.damage.iter_mut() {
             *v *= rand::gen_range(1.0, 1.25 + room_modifier_index as f32);
         }
@@ -190,7 +187,8 @@ impl<'a> Ramble<'a> {
             self.dropped_items.clear();
             self.enemies.clear();
             self.projectiles.clear();
-            self.spawn_enemies(&mut self.dungeon_manager.spawn_room());
+            let mut e = self.dungeon_manager.spawn_room();
+            self.spawn_enemies(&mut e);
             let mut extra_enemies = Vec::new();
             for curse in self.player.curses.iter() {
                 match *curse {
@@ -207,9 +205,17 @@ impl<'a> Ramble<'a> {
                     }
                     ChaosCurse::BonusEnemies => {
                         let (types, amt) = if rand::gen_range(0, 100) < 50 {
-                            (&self.dungeon_manager.world.other, 2)
+                            (
+                                &self.dungeon_manager.worlds[self.dungeon_manager.world_index]
+                                    .other,
+                                2,
+                            )
                         } else {
-                            (&self.dungeon_manager.world.miniboss, 1)
+                            (
+                                &self.dungeon_manager.worlds[self.dungeon_manager.world_index]
+                                    .miniboss,
+                                1,
+                            )
                         };
                         for _ in 0..amt {
                             let enemy = Enemy::new(
@@ -230,7 +236,6 @@ impl<'a> Ramble<'a> {
                 }
             }
             self.spawn_enemies(&mut extra_enemies);
-            self.dungeon_manager.room_index += 1;
             self.state = RoundState::Pre(0);
         }
 
@@ -589,9 +594,6 @@ impl<'a> Ramble<'a> {
         }
     }
     async fn run(&mut self) {
-        self.dungeon_manager.world = &worlds::CRYPT;
-        self.give_curse(ChaosCurse::BonusEnemies);
-
         let rt = render_target(SCREEN_WIDTH as u32, SCREEN_HEIGHT as u32);
         rt.texture.set_filter(FilterMode::Nearest);
         let mut world_camera = Camera2D {

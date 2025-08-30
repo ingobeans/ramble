@@ -424,7 +424,7 @@ dependencies = [
 
 [[package]]
 name = "ramble"
-version = "0.6.21"
+version = "0.6.22"
 dependencies = [
  "asefile",
  "enum-iterator",
