@@ -567,7 +567,6 @@ impl<'a> Ramble<'a> {
         }
     }
     async fn run(&mut self) {
-        self.give_curse(ChaosCurse::AcidPuddles);
         let rt = render_target(SCREEN_WIDTH as u32, SCREEN_HEIGHT as u32);
         rt.texture.set_filter(FilterMode::Nearest);
         let mut world_camera = Camera2D {
