@@ -141,6 +141,15 @@ pub fn slash() -> Projectile {
         ..BASE_PROJECTILE
     }
 }
+pub fn dark_slash() -> Projectile {
+    Projectile {
+        speed: 8.0,
+        drag: 0.35,
+        draw_type: DrawType::Sprite(9.0, 0.0),
+        lifetime: 20,
+        ..BASE_PROJECTILE
+    }
+}
 pub fn fireball() -> Projectile {
     Projectile {
         speed: 2.0,
@@ -167,7 +176,7 @@ pub fn slow_arrow() -> Projectile {
 }
 pub fn boxing_glove() -> Projectile {
     Projectile {
-        speed: 3.0,
+        speed: 4.0,
         drag: 0.1,
         draw_type: DrawType::Sprite(3.0, 0.0),
         lifetime: 20,

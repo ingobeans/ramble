@@ -82,9 +82,10 @@ pub fn get_items() -> Vec<Item> {
             name: "iron chestplate",
             ty: ItemType::Chestplate,
             internal_stats: Stats {
-                max_lives: 1,
-                lives: 1,
-                move_speed_mod: -0.1,
+                max_lives: 2,
+                lives: 2,
+                move_speed_mod: -0.2,
+                roll_delay_mod: 0.2,
                 ..Default::default()
             },
             sprite_x: 1.0,
@@ -128,6 +129,20 @@ pub fn get_items() -> Vec<Item> {
                 projectile: projectiles::slash(),
             })),
             sprite_x: 2.0,
+            sprite_y: 2.0,
+            ..Default::default()
+        },
+        Item {
+            name: "deathblade",
+            internal_stats: Stats {
+                attack_delay: 12.0,
+                damage: hashmap!(DamageType::Unholy => 2.1),
+                ..Default::default()
+            },
+            ty: ItemType::Held(Box::new(Weapon {
+                projectile: projectiles::dark_slash(),
+            })),
+            sprite_x: 12.0,
             sprite_y: 2.0,
             ..Default::default()
         },
@@ -196,6 +211,29 @@ pub fn get_items() -> Vec<Item> {
             },
             sprite_x: 2.0,
             sprite_y: 1.0,
+            ..Default::default()
+        },
+        Item {
+            name: "fire wizards robes",
+            ty: ItemType::Chestplate,
+            internal_stats: Stats {
+                damage_modifiers: hashmap!(DamageType::Fire => 0.25),
+                ..Default::default()
+            },
+            sprite_x: 5.0,
+            sprite_y: 0.0,
+            ..Default::default()
+        },
+        Item {
+            name: "chainmail",
+            ty: ItemType::Chestplate,
+            internal_stats: Stats {
+                max_lives: 1,
+                lives: 1,
+                ..Default::default()
+            },
+            sprite_x: 6.0,
+            sprite_y: 0.0,
             ..Default::default()
         },
         Item {
