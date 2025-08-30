@@ -294,8 +294,11 @@ impl<'a> Ramble<'a> {
                                 }
                             }
                             enemy.damage_frames = 5;
-                            new_projectiles.append(&mut projectile.on_hit());
                             projectile.hit_enemies.push(enemy.id);
+                            // dont allow projectile children to trigger on hit effects on the same enemy
+                            if !projectile.parent_hit_enemies.contains(&enemy.id) {
+                                new_projectiles.append(&mut projectile.on_hit());
+                            }
                         }
                     }
                 } else if self.player.can_take_damage() {

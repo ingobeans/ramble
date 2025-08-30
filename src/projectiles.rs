@@ -50,6 +50,7 @@ pub struct Projectile {
     pub life: u16,
     pub lifetime: u16,
     pub hit_enemies: Vec<usize>,
+    pub parent_hit_enemies: Vec<usize>,
     pub stats: Option<Stats>,
     pub radius: f32,
 }
@@ -64,13 +65,14 @@ impl Projectile {
             for (proj, damage) in items.into_iter() {
                 if ty.is_none_or(|ty| stats.damage.get(&ty).is_some_and(|f| *f > 0.0)) {
                     let mut proj = proj.clone();
-                    proj.stats = Some(Stats {
-                        on_hit_effects: HashMap::new(),
-                        ..self.stats.clone().unwrap()
-                    });
+                    proj.stats = self.stats.clone();
                     if let Some(stats) = &mut proj.stats {
                         stats.damage = damage.clone();
                     }
+                    proj.parent_hit_enemies = self.parent_hit_enemies.clone();
+                    proj.parent_hit_enemies
+                        .append(&mut self.hit_enemies.clone());
+
                     proj.pos = self.pos;
                     proj.direction = self.direction;
                     proj.player_owned = true;
@@ -117,6 +119,7 @@ pub const BASE_PROJECTILE: Projectile = Projectile {
     player_owned: false,
     radius: 6.0,
     hit_enemies: Vec::new(),
+    parent_hit_enemies: Vec::new(),
 };
 
 pub fn acid_puddle() -> Projectile {
