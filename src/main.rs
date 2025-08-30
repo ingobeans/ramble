@@ -104,14 +104,8 @@ impl<'a> Ramble<'a> {
                 });
             }
             ChaosCurse::Gift => {
-                let item = select_random(&self.assets.all_items).clone();
-                if self.player.inv_slot_free() {
-                    self.player.give_item(item);
-                } else {
-                    let pos =
-                        self.player.pos + Vec2::from_angle(rand::gen_range(0.0, PI * 2.0)) * 5.0;
-                    self.dropped_items.push((pos, item));
-                }
+                let pos = self.player.pos + Vec2::from_angle(rand::gen_range(0.0, PI * 2.0)) * 5.0;
+                self.dropped_items.push((pos, gift()));
             }
             _ => {}
         }
@@ -489,7 +483,12 @@ impl<'a> Ramble<'a> {
                 ui::draw_tooltip("press e to pick up", self.assets);
                 if is_key_pressed(KeyCode::E) {
                     let item = self.dropped_items.remove(item_under_player.0).1;
-                    self.player.give_item(item);
+                    if item.name == "gift" {
+                        let item = select_random(&self.assets.all_items).clone();
+                        self.player.give_item(item);
+                    } else {
+                        self.player.give_item(item);
+                    }
                 }
             } else {
                 ui::draw_tooltip("inventory full", self.assets);

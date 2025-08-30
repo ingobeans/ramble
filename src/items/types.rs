@@ -5,6 +5,16 @@ use crate::{
     player::*,
     projectiles::{self, DamageType},
 };
+
+pub fn gift() -> Item {
+    Item {
+        name: "gift",
+        ty: ItemType::Talisman,
+        sprite_x: 1.0,
+        sprite_y: 4.0,
+        ..Default::default()
+    }
+}
 pub fn get_items() -> Vec<Item> {
     vec![
         Item {
