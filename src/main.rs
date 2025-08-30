@@ -268,37 +268,47 @@ impl<'a> Ramble<'a> {
         let mut new_projectiles = Vec::new();
 
         self.projectiles.retain_mut(|projectile| {
-            projectile.pos += projectile.direction * projectile.speed;
             projectile.speed = projectile.speed.lerp(0.0, projectile.drag);
             projectile.life += 1;
-            // check for collisions
-            if projectile.player_owned
-                && let Some(stats) = &projectile.stats
-            {
-                for enemy in self.enemies.iter_mut() {
-                    if !projectile.hit_enemies.contains(&enemy.id)
-                        && (enemy.pos - projectile.pos).length() <= projectile.radius * 1.5
-                    {
-                        // todo: make projectiles moving faster than 8.0 pixels/frame have their hit scan split in to multiple steps
-                        for (k, mut amt) in stats.damage.clone() {
-                            if let Some(modifier) = self.player.stats().damage_modifiers.get(&k) {
-                                amt *= 1.0 + modifier;
+            // split the projectiles movement in to chunks so that projectiles moving fast wont pass through enemies
+            let speed_chunks = if projectile.speed <= 6.0 {
+                vec![projectile.speed]
+            } else {
+                let amt = (projectile.speed / 6.0).floor() + 1.0;
+                vec![projectile.speed / amt; amt as usize]
+            };
+            for speed in speed_chunks.into_iter() {
+                projectile.pos += projectile.direction * speed;
+                // check for collisions
+                if projectile.player_owned
+                    && let Some(stats) = &projectile.stats
+                {
+                    for enemy in self.enemies.iter_mut() {
+                        if !projectile.hit_enemies.contains(&enemy.id)
+                            && (enemy.pos - projectile.pos).length() <= projectile.radius * 1.5
+                        {
+                            // todo: make projectiles moving faster than 8.0 pixels/frame have their hit scan split in to multiple steps
+                            for (k, mut amt) in stats.damage.clone() {
+                                if let Some(modifier) = self.player.stats().damage_modifiers.get(&k)
+                                {
+                                    amt *= 1.0 + modifier;
+                                }
+                                if enemy.shield > 0.0 {
+                                    enemy.shield = (enemy.shield - amt).max(0.0);
+                                } else {
+                                    enemy.health -= amt;
+                                }
                             }
-                            if enemy.shield > 0.0 {
-                                enemy.shield = (enemy.shield - amt).max(0.0);
-                            } else {
-                                enemy.health -= amt;
-                            }
+                            enemy.damage_frames = 5;
+                            new_projectiles.append(&mut projectile.on_hit());
+                            projectile.hit_enemies.push(enemy.id);
                         }
-                        enemy.damage_frames = 5;
-                        new_projectiles.append(&mut projectile.on_hit());
-                        projectile.hit_enemies.push(enemy.id);
                     }
-                }
-            } else if self.player.can_take_damage() {
-                let distance = (self.player.pos - projectile.pos).length();
-                if distance <= projectile.radius {
-                    self.player.damage();
+                } else if self.player.can_take_damage() {
+                    let distance = (self.player.pos - projectile.pos).length();
+                    if distance <= projectile.radius {
+                        self.player.damage();
+                    }
                 }
             }
             let old = projectile.pos;
