@@ -48,6 +48,7 @@ pub struct Projectile {
     pub drag: f32,
     pub draw_type: DrawType,
     pub player_owned: bool,
+    pub boomerang: bool,
     pub life: u16,
     pub lifetime: u16,
     pub hit_enemies: Vec<usize>,
@@ -117,6 +118,7 @@ pub const BASE_PROJECTILE: Projectile = Projectile {
     draw_type: DrawType::Sprite(0.0, 0.0),
     life: 0,
     lifetime: 0,
+    boomerang: false,
     stats: None,
     player_owned: false,
     radius: 6.0,
@@ -165,6 +167,15 @@ pub fn fireball() -> Projectile {
         speed: 2.0,
         draw_type: DrawType::Sprite(2.0, 0.0),
         lifetime: 140,
+        ..BASE_PROJECTILE
+    }
+}
+pub fn boomerang() -> Projectile {
+    Projectile {
+        speed: 3.0,
+        draw_type: DrawType::Sprite(12.0, 0.0),
+        lifetime: 140,
+        boomerang: true,
         ..BASE_PROJECTILE
     }
 }

@@ -133,6 +133,20 @@ pub fn get_items() -> Vec<Item> {
             ..Default::default()
         },
         Item {
+            name: "boomerang",
+            internal_stats: Stats {
+                attack_delay: 20.0,
+                damage: hashmap!(DamageType::Piercing => 1.0),
+                ..Default::default()
+            },
+            ty: ItemType::Held(Box::new(Weapon {
+                projectile: projectiles::boomerang(),
+            })),
+            sprite_x: 13.0,
+            sprite_y: 2.0,
+            ..Default::default()
+        },
+        Item {
             name: "deathblade",
             internal_stats: Stats {
                 attack_delay: 12.0,

@@ -291,6 +291,13 @@ impl<'a> Ramble<'a> {
             };
             for speed in speed_chunks.into_iter() {
                 projectile.pos += projectile.direction * speed;
+                if projectile.boomerang {
+                    projectile.speed -= 0.1;
+                    if projectile.speed < 0.0 && projectile.pos.distance(projectile.origin) <= 4.0 {
+                        return false;
+                    }
+                }
+
                 // check for collisions
                 if projectile.player_owned
                     && let Some(stats) = &projectile.stats
