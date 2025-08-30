@@ -636,9 +636,13 @@ impl<'a> Ramble<'a> {
                 ..Default::default()
             };
 
-            clear_background(Color::from_hex(0x180d2f));
+            clear_background(
+                self.dungeon_manager.worlds[self.dungeon_manager.world_index].background_color,
+            );
             set_camera(&world_camera);
-            clear_background(Color::from_hex(0x180d2f));
+            clear_background(
+                self.dungeon_manager.worlds[self.dungeon_manager.world_index].background_color,
+            );
             // draw background tiles
             let screen_tiles = SCREEN_HEIGHT as u32 / 16;
             let door_start_x = TILES_WIDTH / 2 - 1;
@@ -665,7 +669,7 @@ impl<'a> Ramble<'a> {
                         x as f32 * 16.0 + 8.0,
                         y as f32 * 16.0 + 8.0,
                         tile,
-                        0.0,
+                        self.dungeon_manager.world_index as f32,
                         None,
                     );
                 }

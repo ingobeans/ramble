@@ -1,3 +1,4 @@
+use macroquad::prelude::*;
 use std::sync::LazyLock;
 
 use crate::{
@@ -7,6 +8,7 @@ use crate::{
 };
 
 pub static CRYPT: LazyLock<World> = LazyLock::new(|| World {
+    background_color: Color::from_hex(0x180d2f),
     light: vec![
         // skeleton
         EnemyType {
@@ -139,6 +141,7 @@ pub static CRYPT: LazyLock<World> = LazyLock::new(|| World {
 
 pub static FOREST: LazyLock<World> = LazyLock::new(|| {
     World {
+        background_color: Color::from_hex(0x1e090d),
         light: vec![
             // bird
             EnemyType {

@@ -75,6 +75,7 @@ impl DungeonManager {
 }
 
 pub struct World {
+    pub background_color: Color,
     pub light: Vec<EnemyType>,
     pub heavy: Vec<EnemyType>,
     pub ranged: Vec<EnemyType>,
