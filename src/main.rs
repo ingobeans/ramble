@@ -90,7 +90,9 @@ impl<'a> Ramble<'a> {
             *v *= rand::gen_range(1.0, 1.25 + room_modifier_index as f32);
         }
 
-        if rand::gen_range(0, 100) <= ENCHANT_CHANCE {
+        if let ItemType::Held(_) = item.ty
+            && rand::gen_range(0, 100) <= ENCHANT_CHANCE
+        {
             let enchant = select_random(&self.assets.all_enchantments).clone();
             item.enchantment = Some(enchant);
         }
