@@ -7,7 +7,114 @@ use crate::{
     projectiles,
 };
 
-pub static WORLD_FOREST: LazyLock<World> = LazyLock::new(|| {
+pub static CRYPT: LazyLock<World> = LazyLock::new(|| World {
+    light: vec![
+        // skeleton
+        EnemyType {
+            speed: 0.5,
+            phases: vec![EnemyPhase {
+                sprite_x: 2.0,
+                sprite_y: 1.0,
+                movement: EnemyMovement::Chase,
+                firing: ProjectileFiring::None,
+                end: PhaseEndCondition::None,
+                frames: 2,
+            }],
+            max_health: 6.0,
+        },
+        // slime
+        EnemyType {
+            speed: 1.0,
+            phases: vec![
+                EnemyPhase {
+                    sprite_x: 2.0,
+                    sprite_y: 3.0,
+                    movement: EnemyMovement::Chase,
+                    firing: ProjectileFiring::None,
+                    end: PhaseEndCondition::Frames(8),
+                    frames: 4,
+                },
+                EnemyPhase {
+                    sprite_x: 2.0,
+                    sprite_y: 3.0,
+                    movement: EnemyMovement::Still,
+                    firing: ProjectileFiring::None,
+                    end: PhaseEndCondition::Frames(8),
+                    frames: 1,
+                },
+            ],
+            max_health: 6.0,
+        },
+    ],
+    heavy: vec![
+        // sorcerer skeleton
+        EnemyType {
+            speed: 0.5,
+            phases: vec![
+                EnemyPhase {
+                    sprite_x: 6.0,
+                    sprite_y: 1.0,
+                    movement: EnemyMovement::Chase,
+                    firing: ProjectileFiring::None,
+                    end: PhaseEndCondition::Frames(60),
+                    frames: 2,
+                },
+                EnemyPhase {
+                    sprite_x: 8.0,
+                    sprite_y: 1.0,
+                    movement: EnemyMovement::Still,
+                    firing: ProjectileFiring::Forwards(projectiles::blue_power_orb(), 15),
+                    end: PhaseEndCondition::Frames(15),
+                    frames: 1,
+                },
+            ],
+            max_health: 25.0,
+        },
+    ],
+    ranged: vec![
+        // skeleton archer
+        EnemyType {
+            speed: 0.25,
+            phases: vec![EnemyPhase {
+                sprite_x: 4.0,
+                sprite_y: 1.0,
+                movement: EnemyMovement::Wander(true),
+                firing: ProjectileFiring::Forwards(projectiles::slow_arrow(), 35),
+                end: PhaseEndCondition::None,
+                frames: 2,
+            }],
+            max_health: 6.0,
+        },
+    ],
+    other: vec![],
+    miniboss: vec![
+        // skeleton-slime
+        EnemyType {
+            speed: 0.5,
+            phases: vec![
+                EnemyPhase {
+                    sprite_x: 6.0,
+                    sprite_y: 3.0,
+                    movement: EnemyMovement::Wander(true),
+                    firing: ProjectileFiring::Forwards(projectiles::slimeball(), 35),
+                    end: PhaseEndCondition::HealthUnder(0.5),
+                    frames: 2,
+                },
+                EnemyPhase {
+                    sprite_x: 8.0,
+                    sprite_y: 3.0,
+                    movement: EnemyMovement::Chase,
+                    firing: ProjectileFiring::None,
+                    end: PhaseEndCondition::None,
+                    frames: 2,
+                },
+            ],
+            max_health: 100.0,
+        },
+    ],
+});
+
+pub static FOREST: LazyLock<World> = LazyLock::new(|| {
     World {
         light: vec![
             // bird
@@ -21,7 +128,7 @@ pub static WORLD_FOREST: LazyLock<World> = LazyLock::new(|| {
                     end: PhaseEndCondition::None,
                     frames: 2,
                 }],
-                max_health: 5.0,
+                max_health: 4.0,
             },
             // mini hood
             EnemyType {
@@ -34,7 +141,7 @@ pub static WORLD_FOREST: LazyLock<World> = LazyLock::new(|| {
                     end: PhaseEndCondition::None,
                     frames: 2,
                 }],
-                max_health: 5.0,
+                max_health: 4.0,
             },
         ],
         heavy: vec![

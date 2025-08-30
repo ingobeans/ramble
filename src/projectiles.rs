@@ -42,6 +42,7 @@ impl Default for DrawType {
 #[derive(Clone, Default)]
 pub struct Projectile {
     pub pos: Vec2,
+    pub origin: Vec2,
     pub direction: Vec2,
     pub speed: f32,
     pub drag: f32,
@@ -74,6 +75,7 @@ impl Projectile {
                         .append(&mut self.hit_enemies.clone());
 
                     proj.pos = self.pos;
+                    proj.origin = self.origin;
                     proj.direction = self.direction;
                     proj.player_owned = true;
                     new_projectiles.push(proj);
@@ -96,10 +98,9 @@ impl Projectile {
                     .draw_sprite(x, y, *sprite_x, *sprite_y, Some(&params));
             }
             DrawType::Particle(particle) => {
-                let origin = self.pos - self.direction * self.life as f32 * self.speed;
                 let ctx = ParticleContext {
                     pos: self.pos,
-                    origin,
+                    origin: self.origin,
                     life: self.life,
                 };
                 particle(&ctx, assets);
@@ -109,6 +110,7 @@ impl Projectile {
 }
 pub const BASE_PROJECTILE: Projectile = Projectile {
     pos: Vec2::ZERO,
+    origin: Vec2::ZERO,
     direction: Vec2::ZERO,
     speed: 0.0,
     drag: 0.0,
@@ -132,6 +134,14 @@ pub fn acid_puddle() -> Projectile {
     }
 }
 
+pub fn slimeball() -> Projectile {
+    Projectile {
+        speed: 0.8,
+        draw_type: DrawType::Sprite(10.0, 0.0),
+        lifetime: 120,
+        ..BASE_PROJECTILE
+    }
+}
 pub fn slash() -> Projectile {
     Projectile {
         speed: 5.0,
@@ -196,6 +206,14 @@ pub fn power_orb() -> Projectile {
         speed: 2.0,
         lifetime: 60,
         draw_type: DrawType::Sprite(5.0, 0.0),
+        ..BASE_PROJECTILE
+    }
+}
+pub fn blue_power_orb() -> Projectile {
+    Projectile {
+        speed: 1.5,
+        lifetime: 90,
+        draw_type: DrawType::Sprite(11.0, 0.0),
         ..BASE_PROJECTILE
     }
 }

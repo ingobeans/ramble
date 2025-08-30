@@ -77,7 +77,7 @@ impl<'a> Ramble<'a> {
             enemy_id: 0,
             projectiles: Vec::new(),
             dungeon_manager: DungeonManager {
-                world: &WORLD_FOREST,
+                world: &FOREST,
                 room_index: 0,
             },
             ui_manager: UiManager::default(),
@@ -201,6 +201,7 @@ impl<'a> Ramble<'a> {
                                 rand::gen_range(top_left_corner.x, bottom_right_corner.x),
                                 rand::gen_range(top_left_corner.y, bottom_right_corner.y - 48.0),
                             );
+                            new.origin = new.pos;
                             self.projectiles.push(new);
                         }
                     }
@@ -272,6 +273,7 @@ impl<'a> Ramble<'a> {
             // relative to the projectiles drag. more drag => more affected by players move direction
             projectile.speed +=
                 (25.0 * projectile.drag) * (projectile.direction.dot(move_vector).max(0.0));
+            projectile.origin = projectile.pos;
             self.projectiles.push(projectile);
             self.player.attack_counter = self.player.stats().attack_delay;
         }
@@ -396,6 +398,7 @@ impl<'a> Ramble<'a> {
                         projectile.pos = enemy.pos;
                         projectile.direction = enemy.direction;
                         projectile.player_owned = false;
+                        projectile.origin = projectile.pos;
                         self.projectiles.push(projectile);
                     }
                     ProjectileFiring::Around(projectile, delay, amt) => {
@@ -408,6 +411,7 @@ impl<'a> Ramble<'a> {
                             projectile.pos = enemy.pos;
                             projectile.direction = direction;
                             projectile.player_owned = false;
+                            projectile.origin = projectile.pos;
                             self.projectiles.push(projectile);
                         }
                     }
@@ -577,6 +581,7 @@ impl<'a> Ramble<'a> {
         }
     }
     async fn run(&mut self) {
+        self.dungeon_manager.world = &worlds::CRYPT;
         let rt = render_target(SCREEN_WIDTH as u32, SCREEN_HEIGHT as u32);
         rt.texture.set_filter(FilterMode::Nearest);
         let mut world_camera = Camera2D {
