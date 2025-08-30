@@ -82,6 +82,19 @@ impl<'a> Ramble<'a> {
             ui_manager: UiManager::default(),
         }
     }
+    fn get_item_reward(&self) -> Item {
+        let mut item = select_random(&self.assets.all_items).clone();
+        let room_modifier_index = self.dungeon_manager.room_index / 2;
+        for (_, v) in item.internal_stats.damage.iter_mut() {
+            *v *= rand::gen_range(1.0, 1.25 + room_modifier_index as f32);
+        }
+
+        if rand::gen_range(0, 100) <= ENCHANT_CHANCE {
+            let enchant = select_random(&self.assets.all_enchantments).clone();
+            item.enchantment = Some(enchant);
+        }
+        item
+    }
     fn give_curse(&mut self, curse: ChaosCurse) {
         let mut lost_items = Vec::new();
         match &curse {
@@ -446,12 +459,7 @@ impl<'a> Ramble<'a> {
             && self.enemies.is_empty()
         {
             self.projectiles.retain(|f| f.player_owned);
-            self.state = RoundState::Post(
-                0,
-                Some(std::array::from_fn(|_| {
-                    select_random(&self.assets.all_items).clone()
-                })),
-            )
+            self.state = RoundState::Post(0, Some(std::array::from_fn(|_| self.get_item_reward())))
         }
     }
     fn draw_ui(&mut self, mouse_x: f32, mouse_y: f32, ui_width: f32) {
@@ -487,8 +495,7 @@ impl<'a> Ramble<'a> {
                 if is_key_pressed(KeyCode::E) {
                     let item = self.dropped_items.remove(item_under_player.0).1;
                     if item.name == "gift" {
-                        let item = select_random(&self.assets.all_items).clone();
-                        self.player.give_item(item);
+                        self.player.give_item(self.get_item_reward());
                     } else {
                         self.player.give_item(item);
                     }

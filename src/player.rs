@@ -78,7 +78,7 @@ impl Stats {
                 if *v == f32::default() {
                     continue;
                 }
-                lines.push(format!("\x00{} damage\x01: {v}", k.to_text()));
+                lines.push(format!("\x00{} damage\x01: {v:.2}", k.to_text()));
             }
             lines
         }
@@ -208,7 +208,7 @@ impl Player {
     pub fn repair_armor(&mut self) {
         for armor in [&mut self.chestplate, &mut self.helmet] {
             if let Some(armor) = armor {
-                armor.stats.lives = armor.stats.max_lives;
+                armor.internal_stats.lives = armor.internal_stats.max_lives;
             }
         }
     }
@@ -247,7 +247,7 @@ impl Player {
         let t = self.talismans.clone();
         items.append(&mut t.iter().collect());
         for item in items.into_iter().flatten() {
-            stats.merge(&item.stats);
+            stats.merge(&item.stats());
         }
         stats.apply_modifiers();
         stats
@@ -266,9 +266,9 @@ impl Player {
         ]);
         for item in items {
             if let Some(item) = item
-                && item.stats.lives > 0
+                && item.internal_stats.lives > 0
             {
-                item.stats.lives -= 1;
+                item.internal_stats.lives -= 1;
                 return;
             }
         }

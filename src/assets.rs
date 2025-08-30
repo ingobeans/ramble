@@ -4,12 +4,13 @@ use image::EncodableLayout;
 use macroquad::prelude::*;
 
 use crate::{
-    items::{Item, get_items},
+    items::{Enchantment, Item, get_enchantments, get_items},
     utils::*,
 };
 
 pub struct Assets {
     pub all_items: Vec<Item>,
+    pub all_enchantments: Vec<Enchantment>,
     pub entities: Spritesheet,
     pub items: Spritesheet,
     pub particles: Spritesheet,
@@ -50,6 +51,7 @@ impl Default for Assets {
                 4.0,
             ),
             all_items: get_items(),
+            all_enchantments: get_enchantments(),
         }
     }
 }

@@ -200,9 +200,9 @@ pub fn draw_hover_item(item: &Item, x: f32, y: f32, assets: &Assets) {
     item.ty.draw_icon(x + 2.0 + 6.0, y + 2.0 + 6.0, assets);
     let x = x + 4.0 + 12.0;
     let mut y = y + 2.0;
-    assets.draw_text(item.name, x, y);
+    assets.draw_text(&item.name(), x, y);
     y += 5.0;
-    for line in item.stats.to_text() {
+    for line in item.stats().to_text() {
         assets.draw_text(&line, x, y);
         y += 5.0;
     }

@@ -1,5 +1,5 @@
 mod types;
-use std::mem::discriminant;
+use std::{borrow::Cow, mem::discriminant};
 
 pub use types::*;
 
@@ -9,6 +9,12 @@ use crate::{assets::Assets, player::Stats, projectiles::Projectile};
 pub struct Weapon {
     /// Projectile fired
     pub projectile: Projectile,
+}
+
+#[derive(Clone)]
+pub struct Enchantment {
+    name: &'static str,
+    stats: Stats,
 }
 
 #[derive(Clone)]
@@ -28,14 +34,6 @@ impl ItemType {
         };
         assets.items.draw_sprite(x, y, 0.0, ty, None);
     }
-    pub fn name(&self) -> &'static str {
-        match self {
-            ItemType::Talisman => "talisman",
-            ItemType::Chestplate => "chestplate",
-            ItemType::Helmet => "helmet",
-            ItemType::Held(_) => "weapon",
-        }
-    }
 }
 impl PartialEq for ItemType {
     fn eq(&self, other: &Self) -> bool {
@@ -54,5 +52,22 @@ pub struct Item {
     pub ty: ItemType,
     pub sprite_x: f32,
     pub sprite_y: f32,
-    pub stats: Stats,
+    pub internal_stats: Stats,
+    pub enchantment: Option<Enchantment>,
+}
+impl Item {
+    pub fn name(&self) -> Cow<'_, str> {
+        if let Some(e) = &self.enchantment {
+            Cow::Owned(format!("{} of {}", self.name, e.name))
+        } else {
+            Cow::Borrowed(self.name)
+        }
+    }
+    pub fn stats(&self) -> Stats {
+        let mut stats = self.internal_stats.clone();
+        if let Some(e) = self.enchantment.clone() {
+            stats.merge(&e.stats);
+        }
+        stats
+    }
 }

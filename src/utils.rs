@@ -15,6 +15,7 @@ pub const PREROUND_TRANSITION_TIME: u32 = 40;
 pub const PREROUND_GRACE_TIME: u32 = 20;
 
 pub const OTHER_CHANCE: u8 = 10;
+pub const ENCHANT_CHANCE: u8 = 10;
 
 pub const INV_SLOTS: usize = 9;
 

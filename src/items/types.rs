@@ -1,7 +1,7 @@
 use hashmap_macro::hashmap;
 
 use crate::{
-    items::{Item, ItemType, Weapon},
+    items::{Enchantment, Item, ItemType, Weapon},
     player::*,
     projectiles::{self, DamageType},
 };
@@ -15,12 +15,61 @@ pub fn gift() -> Item {
         ..Default::default()
     }
 }
+
+pub fn get_enchantments() -> Vec<Enchantment> {
+    vec![
+        Enchantment {
+            name: "burning",
+            stats: Stats {
+                damage: hashmap!(DamageType::Fire => 2.0),
+                ..Default::default()
+            },
+        },
+        Enchantment {
+            name: "haste",
+            stats: Stats {
+                attack_delay_mod: -0.3,
+                ..Default::default()
+            },
+        },
+        Enchantment {
+            name: "sluggishness",
+            stats: Stats {
+                attack_delay_mod: 0.3,
+                ..Default::default()
+            },
+        },
+        Enchantment {
+            name: "light feet",
+            stats: Stats {
+                move_speed_mod: 0.3,
+                ..Default::default()
+            },
+        },
+        Enchantment {
+            name: "holiness",
+            stats: Stats {
+                damage: hashmap!(DamageType::Holy => 2.0),
+                ..Default::default()
+            },
+        },
+        Enchantment {
+            name: "hate",
+            stats: Stats {
+                damage: hashmap!(DamageType::Unholy => 2.0),
+                damage_modifiers: hashmap!(DamageType::Holy => -1.0),
+                ..Default::default()
+            },
+        },
+    ]
+}
+
 pub fn get_items() -> Vec<Item> {
     vec![
         Item {
             name: "iron chestplate",
             ty: ItemType::Chestplate,
-            stats: Stats {
+            internal_stats: Stats {
                 max_lives: 1,
                 lives: 1,
                 move_speed_mod: -0.1,
@@ -33,7 +82,7 @@ pub fn get_items() -> Vec<Item> {
         Item {
             name: "iron helmet",
             ty: ItemType::Helmet,
-            stats: Stats {
+            internal_stats: Stats {
                 max_lives: 1,
                 lives: 1,
                 ..Default::default()
@@ -44,7 +93,7 @@ pub fn get_items() -> Vec<Item> {
         },
         Item {
             name: "bow",
-            stats: Stats {
+            internal_stats: Stats {
                 attack_delay: 30.0,
                 damage: hashmap!(DamageType::Piercing => 1.0),
                 ..Default::default()
@@ -58,7 +107,7 @@ pub fn get_items() -> Vec<Item> {
         },
         Item {
             name: "longsword",
-            stats: Stats {
+            internal_stats: Stats {
                 attack_delay: 10.0,
                 damage: hashmap!(DamageType::Slashing => 2.0),
                 ..Default::default()
@@ -75,7 +124,7 @@ pub fn get_items() -> Vec<Item> {
             ty: ItemType::Held(Box::new(Weapon {
                 projectile: projectiles::slash(),
             })),
-            stats: Stats {
+            internal_stats: Stats {
                 attack_delay: 10.0,
                 damage: hashmap!(DamageType::Slashing => 1.0),
                 move_speed_mod: 0.1,
@@ -90,7 +139,7 @@ pub fn get_items() -> Vec<Item> {
             ty: ItemType::Held(Box::new(Weapon {
                 projectile: projectiles::boxing_glove(),
             })),
-            stats: Stats {
+            internal_stats: Stats {
                 attack_delay: 30.0,
                 damage: hashmap!(DamageType::Slashing => 5.0),
                 ..Default::default()
@@ -104,7 +153,7 @@ pub fn get_items() -> Vec<Item> {
             ty: ItemType::Held(Box::new(Weapon {
                 projectile: projectiles::icicle(),
             })),
-            stats: Stats {
+            internal_stats: Stats {
                 attack_delay: 30.0,
                 damage: hashmap!(DamageType::Piercing => 5.0),
                 ..Default::default()
@@ -116,7 +165,7 @@ pub fn get_items() -> Vec<Item> {
         Item {
             name: "leather tunic",
             ty: ItemType::Chestplate,
-            stats: Stats {
+            internal_stats: Stats {
                 roll_delay_mod: -0.2,
                 damage_modifiers: hashmap!(DamageType::Piercing => 0.05),
                 ..Default::default()
@@ -128,7 +177,7 @@ pub fn get_items() -> Vec<Item> {
         Item {
             name: "archers hood",
             ty: ItemType::Helmet,
-            stats: Stats {
+            internal_stats: Stats {
                 roll_delay_mod: -0.25,
                 move_speed_mod: 0.25,
                 ..Default::default()
@@ -140,7 +189,7 @@ pub fn get_items() -> Vec<Item> {
         Item {
             name: "wizards robes",
             ty: ItemType::Chestplate,
-            stats: Stats {
+            internal_stats: Stats {
                 damage_modifiers: hashmap!(DamageType::Holy => 0.2, DamageType::Unholy => -0.2),
                 ..Default::default()
             },
@@ -151,7 +200,7 @@ pub fn get_items() -> Vec<Item> {
         Item {
             name: "wizards hat",
             ty: ItemType::Helmet,
-            stats: Stats {
+            internal_stats: Stats {
                 damage_modifiers: hashmap!(DamageType::Holy => 0.2, DamageType::Unholy => -0.2),
                 ..Default::default()
             },
@@ -162,7 +211,7 @@ pub fn get_items() -> Vec<Item> {
         Item {
             name: "cobalt chestplate",
             ty: ItemType::Chestplate,
-            stats: Stats {
+            internal_stats: Stats {
                 max_lives: 1,
                 lives: 1,
                 damage_modifiers: hashmap!(DamageType::Unholy => 0.2),
@@ -177,7 +226,7 @@ pub fn get_items() -> Vec<Item> {
             ty: ItemType::Held(Box::new(Weapon {
                 projectile: projectiles::power_orb(),
             })),
-            stats: Stats {
+            internal_stats: Stats {
                 attack_delay: 30.0,
                 damage: hashmap!(DamageType::Unholy => 4.0),
                 ..Default::default()
@@ -191,7 +240,7 @@ pub fn get_items() -> Vec<Item> {
             ty: ItemType::Held(Box::new(Weapon {
                 projectile: projectiles::light_ray(),
             })),
-            stats: Stats {
+            internal_stats: Stats {
                 attack_delay: 15.0,
                 damage: hashmap!(DamageType::Holy => 2.0),
                 ..Default::default()
@@ -205,7 +254,7 @@ pub fn get_items() -> Vec<Item> {
             ty: ItemType::Held(Box::new(Weapon {
                 projectile: projectiles::star_bazooka(),
             })),
-            stats: Stats {
+            internal_stats: Stats {
                 attack_delay: 70.0,
                 on_hit_effects: hashmap!(None => vec![(projectiles::star_explosion(),hashmap!(DamageType::Holy => 5.0))]),
                 ..Default::default()
@@ -217,7 +266,7 @@ pub fn get_items() -> Vec<Item> {
         Item {
             name: "heart pendant",
             ty: ItemType::Talisman,
-            stats: Stats {
+            internal_stats: Stats {
                 max_lives: 1,
                 lives: 1,
                 ..Default::default()
@@ -229,7 +278,7 @@ pub fn get_items() -> Vec<Item> {
         Item {
             name: "fire necklace",
             ty: ItemType::Talisman,
-            stats: Stats {
+            internal_stats: Stats {
                 on_hit_effects: hashmap![Some(DamageType::Fire) => vec![(projectiles::fire(),hashmap!(DamageType::Fire => 2.0))]],
                 ..Default::default()
             },
@@ -242,7 +291,7 @@ pub fn get_items() -> Vec<Item> {
             ty: ItemType::Held(Box::new(Weapon {
                 projectile: projectiles::fireball(),
             })),
-            stats: Stats {
+            internal_stats: Stats {
                 attack_delay: 30.0,
                 damage: hashmap!(DamageType::Fire => 4.0),
                 ..Default::default()
@@ -256,7 +305,7 @@ pub fn get_items() -> Vec<Item> {
             ty: ItemType::Held(Box::new(Weapon {
                 projectile: projectiles::lance(),
             })),
-            stats: Stats {
+            internal_stats: Stats {
                 attack_delay: 50.0,
                 damage: hashmap!(DamageType::Piercing =>4.0),
                 ..Default::default()
@@ -268,7 +317,7 @@ pub fn get_items() -> Vec<Item> {
         Item {
             name: "pendant of swiftness",
             ty: ItemType::Talisman,
-            stats: Stats {
+            internal_stats: Stats {
                 move_speed_mod: 0.2,
                 roll_delay_mod: -0.2,
                 ..Default::default()
@@ -280,7 +329,7 @@ pub fn get_items() -> Vec<Item> {
         Item {
             name: "toolbelt of rapid fire",
             ty: ItemType::Talisman,
-            stats: Stats {
+            internal_stats: Stats {
                 attack_delay_mod: -0.2,
                 ..Default::default()
             },
@@ -293,7 +342,7 @@ pub fn get_items() -> Vec<Item> {
             ty: ItemType::Held(Box::new(Weapon {
                 projectile: projectiles::razor_dart(),
             })),
-            stats: Stats {
+            internal_stats: Stats {
                 attack_delay: 5.0,
                 damage: hashmap!(DamageType::Piercing => 0.5),
                 ..Default::default()
