@@ -1,6 +1,6 @@
 [package]
 name = "ramble"
-version = "0.6.11"
+version = "0.6.12"
 edition = "2024"
 
 [dependencies]

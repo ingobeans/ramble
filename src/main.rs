@@ -567,10 +567,10 @@ impl<'a> Ramble<'a> {
         }
     }
     async fn run(&mut self) {
-        let render_target = render_target(SCREEN_WIDTH as u32, SCREEN_HEIGHT as u32);
-        render_target.texture.set_filter(FilterMode::Nearest);
-        let mut pixel_camera = Camera2D {
-            render_target: Some(render_target),
+        let rt = render_target(SCREEN_WIDTH as u32, SCREEN_HEIGHT as u32);
+        rt.texture.set_filter(FilterMode::Nearest);
+        let mut world_camera = Camera2D {
+            render_target: Some(rt),
             zoom: Vec2::new(1.0 / SCREEN_WIDTH * 2.0, 1.0 / SCREEN_HEIGHT * 2.0),
             target: Vec2::new(SCREEN_WIDTH / 2.0, SCREEN_HEIGHT / 2.0),
             ..Default::default()
@@ -597,8 +597,20 @@ impl<'a> Ramble<'a> {
                 mouse_y / scale_factor,
             );
 
+            // set up UI camera
+            let w = screen_width / scale_factor;
+            let h = screen_height / scale_factor;
+            let rt = render_target(w as u32, h as u32);
+            rt.texture.set_filter(FilterMode::Nearest);
+            let ui_camera = Camera2D {
+                render_target: Some(rt),
+                zoom: Vec2::new(1.0 / w * 2.0, 1.0 / h * 2.0),
+                target: Vec2::new(w / 2.0, h / 2.0),
+                ..Default::default()
+            };
+
             clear_background(Color::from_hex(0x180d2f));
-            set_camera(&pixel_camera);
+            set_camera(&world_camera);
             clear_background(Color::from_hex(0x180d2f));
             // draw background tiles
             let screen_tiles = SCREEN_HEIGHT as u32 / 16;
@@ -653,14 +665,14 @@ impl<'a> Ramble<'a> {
                         *frame += 1;
                         if *frame < PREROUND_TRANSITION_TIME / 2 {
                             let amt = *frame as f32 / (PREROUND_TRANSITION_TIME as f32 / 2.0);
-                            pixel_camera.offset.y = amt * 2.0;
+                            world_camera.offset.y = amt * 2.0;
                         } else if *frame <= PREROUND_TRANSITION_TIME {
                             let amt = ((*frame) - PREROUND_TRANSITION_TIME / 2) as f32
                                 / (PREROUND_TRANSITION_TIME as f32 / 2.0);
-                            pixel_camera.offset.y = amt * 2.0 - 2.0;
+                            world_camera.offset.y = amt * 2.0 - 2.0;
                         }
                         if *frame > max {
-                            pixel_camera.offset.y = 0.0;
+                            world_camera.offset.y = 0.0;
                             self.state = RoundState::Active;
                         }
                     }
@@ -676,12 +688,14 @@ impl<'a> Ramble<'a> {
             if self.player.pos.y <= 94.0 {
                 self.handle_item_shop()
             }
+            set_camera(&ui_camera);
+            clear_background(Color::from_rgba(0, 0, 0, 0));
             self.draw_ui(mouse_x, mouse_y);
 
             // draw pixel camera to actual screen
             set_default_camera();
             draw_texture_ex(
-                &pixel_camera.render_target.as_ref().unwrap().texture,
+                &world_camera.render_target.as_ref().unwrap().texture,
                 horizontal_padding,
                 0.0,
                 WHITE,
@@ -690,6 +704,16 @@ impl<'a> Ramble<'a> {
                         SCREEN_WIDTH * scale_factor,
                         SCREEN_HEIGHT * scale_factor,
                     )),
+                    ..Default::default()
+                },
+            );
+            draw_texture_ex(
+                &ui_camera.render_target.as_ref().unwrap().texture,
+                horizontal_padding,
+                0.0,
+                WHITE,
+                DrawTextureParams {
+                    dest_size: Some(Vec2::new(screen_width, screen_height)),
                     ..Default::default()
                 },
             );
