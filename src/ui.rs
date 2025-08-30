@@ -24,6 +24,7 @@ impl UiManager {
         player: &mut Player,
         mouse_x: f32,
         mouse_y: f32,
+        ui_width: f32,
     ) -> Option<Item> {
         let max = player.stats().max_lives;
         for i in 0..max {
@@ -174,7 +175,7 @@ impl UiManager {
         let width = 19.0 * 4.0 + 8.0 + 4.0;
         let height = 12.0;
         for (index, curse) in player.curses.iter().rev().enumerate() {
-            let x = SCREEN_WIDTH - width;
+            let x = ui_width - (ui_width - SCREEN_WIDTH) / 2.0 - width;
             let y = index as f32 * (height - 1.0);
             draw_ui_rect(x, y, width, height);
             assets

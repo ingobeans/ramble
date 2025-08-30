@@ -454,10 +454,10 @@ impl<'a> Ramble<'a> {
             )
         }
     }
-    fn draw_ui(&mut self, mouse_x: f32, mouse_y: f32) {
+    fn draw_ui(&mut self, mouse_x: f32, mouse_y: f32, ui_width: f32) {
         if let Some(dropped) =
             self.ui_manager
-                .update(self.assets, &mut self.player, mouse_x, mouse_y)
+                .update(self.assets, &mut self.player, mouse_x, mouse_y, ui_width)
         {
             let mut pos = self.player.pos;
             pos += (Vec2::new(mouse_x, mouse_y) - self.player.pos).normalize() * 3.0;
@@ -567,6 +567,7 @@ impl<'a> Ramble<'a> {
         }
     }
     async fn run(&mut self) {
+        self.give_curse(ChaosCurse::AcidPuddles);
         let rt = render_target(SCREEN_WIDTH as u32, SCREEN_HEIGHT as u32);
         rt.texture.set_filter(FilterMode::Nearest);
         let mut world_camera = Camera2D {
@@ -598,14 +599,14 @@ impl<'a> Ramble<'a> {
             );
 
             // set up UI camera
-            let w = screen_width / scale_factor;
-            let h = screen_height / scale_factor;
-            let rt = render_target(w as u32, h as u32);
+            let ui_width = screen_width / scale_factor;
+            let ui_height = screen_height / scale_factor;
+            let rt = render_target(ui_width as u32, ui_height as u32);
             rt.texture.set_filter(FilterMode::Nearest);
             let ui_camera = Camera2D {
                 render_target: Some(rt),
-                zoom: Vec2::new(1.0 / w * 2.0, 1.0 / h * 2.0),
-                target: Vec2::new(w / 2.0, h / 2.0),
+                zoom: Vec2::new(1.0 / ui_width * 2.0, 1.0 / ui_height * 2.0),
+                target: Vec2::new(ui_width / 2.0, ui_height / 2.0),
                 ..Default::default()
             };
 
@@ -690,7 +691,7 @@ impl<'a> Ramble<'a> {
             }
             set_camera(&ui_camera);
             clear_background(Color::from_rgba(0, 0, 0, 0));
-            self.draw_ui(mouse_x, mouse_y);
+            self.draw_ui(mouse_x, mouse_y, ui_width);
 
             // draw pixel camera to actual screen
             set_default_camera();
