@@ -66,6 +66,7 @@ impl<'a> Ramble<'a> {
         player.hand = Some(assets.all_items[3].clone());
         player.helmet = Some(assets.all_items[1].clone());
         player.chestplate = Some(assets.all_items[0].clone());
+        //player.hand.as_mut().unwrap().enchantment = Some(assets.all_enchantments[0].clone());
 
         Ramble {
             state: RoundState::Post(100, None),

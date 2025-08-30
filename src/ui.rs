@@ -227,6 +227,11 @@ pub fn draw_slot(
     draw_ui_rect(x, y, 12.0, 12.0);
     let hovered = (x..x + 12.0).contains(&mouse_x) && (y - 1.0..y + 12.0 + 1.0).contains(&mouse_y);
     if let Some(item) = item {
+        if let Some(e) = &item.enchantment {
+            assets
+                .enchantments
+                .draw_sprite(x + 6.0, y + 6.0, e.sprite_x, e.sprite_y, None);
+        }
         assets
             .items
             .draw_sprite(x + 6.0, y + 6.0, item.sprite_x, item.sprite_y, None);

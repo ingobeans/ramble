@@ -24,6 +24,8 @@ pub fn get_enchantments() -> Vec<Enchantment> {
                 damage: hashmap!(DamageType::Fire => 2.0),
                 ..Default::default()
             },
+            sprite_x: 0.0,
+            sprite_y: 0.0,
         },
         Enchantment {
             name: "haste",
@@ -31,6 +33,8 @@ pub fn get_enchantments() -> Vec<Enchantment> {
                 attack_delay_mod: -0.3,
                 ..Default::default()
             },
+            sprite_x: 1.0,
+            sprite_y: 0.0,
         },
         Enchantment {
             name: "sluggishness",
@@ -38,6 +42,8 @@ pub fn get_enchantments() -> Vec<Enchantment> {
                 attack_delay_mod: 0.3,
                 ..Default::default()
             },
+            sprite_x: 2.0,
+            sprite_y: 0.0,
         },
         Enchantment {
             name: "light feet",
@@ -45,6 +51,8 @@ pub fn get_enchantments() -> Vec<Enchantment> {
                 move_speed_mod: 0.3,
                 ..Default::default()
             },
+            sprite_x: 3.0,
+            sprite_y: 0.0,
         },
         Enchantment {
             name: "holiness",
@@ -52,6 +60,8 @@ pub fn get_enchantments() -> Vec<Enchantment> {
                 damage: hashmap!(DamageType::Holy => 2.0),
                 ..Default::default()
             },
+            sprite_x: 4.0,
+            sprite_y: 0.0,
         },
         Enchantment {
             name: "hate",
@@ -60,6 +70,8 @@ pub fn get_enchantments() -> Vec<Enchantment> {
                 damage_modifiers: hashmap!(DamageType::Holy => -1.0),
                 ..Default::default()
             },
+            sprite_x: 5.0,
+            sprite_y: 0.0,
         },
     ]
 }

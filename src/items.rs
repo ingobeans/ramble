@@ -15,6 +15,8 @@ pub struct Weapon {
 pub struct Enchantment {
     name: &'static str,
     stats: Stats,
+    pub sprite_x: f32,
+    pub sprite_y: f32,
 }
 
 #[derive(Clone)]
