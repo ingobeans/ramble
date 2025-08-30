@@ -104,7 +104,7 @@ impl<'a> Ramble<'a> {
                 });
             }
             ChaosCurse::Gift => {
-                let pos = self.player.pos + Vec2::from_angle(rand::gen_range(0.0, PI * 2.0)) * 5.0;
+                let pos = Vec2::new(SCREEN_WIDTH / 2.0, 64.0);
                 self.dropped_items.push((pos, gift()));
             }
             _ => {}
