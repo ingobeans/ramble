@@ -12,7 +12,7 @@ pub static CRYPT: LazyLock<World> = LazyLock::new(|| World {
     light: vec![
         // skeleton
         EnemyType {
-            speed: 0.5,
+            speed: 1.0,
             phases: vec![EnemyPhase {
                 sprite_x: 2.0,
                 sprite_y: 1.0,
@@ -21,7 +21,7 @@ pub static CRYPT: LazyLock<World> = LazyLock::new(|| World {
                 end: PhaseEndCondition::None,
                 frames: 2,
             }],
-            max_health: 6.0,
+            max_health: 17.0,
         },
         // slime
         EnemyType {
@@ -44,7 +44,7 @@ pub static CRYPT: LazyLock<World> = LazyLock::new(|| World {
                     frames: 1,
                 },
             ],
-            max_health: 6.0,
+            max_health: 25.0,
         },
     ],
     heavy: vec![
@@ -69,7 +69,7 @@ pub static CRYPT: LazyLock<World> = LazyLock::new(|| World {
                     frames: 1,
                 },
             ],
-            max_health: 25.0,
+            max_health: 55.0,
         },
     ],
     ranged: vec![
@@ -84,7 +84,7 @@ pub static CRYPT: LazyLock<World> = LazyLock::new(|| World {
                 end: PhaseEndCondition::None,
                 frames: 2,
             }],
-            max_health: 6.0,
+            max_health: 35.0,
         },
     ],
     other: vec![
@@ -109,7 +109,7 @@ pub static CRYPT: LazyLock<World> = LazyLock::new(|| World {
                     frames: 1,
                 },
             ],
-            max_health: 20.0,
+            max_health: 65.0,
         },
     ],
     miniboss: vec![
@@ -134,7 +134,7 @@ pub static CRYPT: LazyLock<World> = LazyLock::new(|| World {
                     frames: 2,
                 },
             ],
-            max_health: 100.0,
+            max_health: 110.0,
         },
     ],
 });

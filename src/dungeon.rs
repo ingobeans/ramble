@@ -27,7 +27,8 @@ impl DungeonManager {
     pub fn spawn_room(&mut self) -> Vec<Enemy> {
         self.room_index += 1;
         self.total_room_index += 1;
-        if self.room_index > 12 {
+        // move to next world if all 12 levels complete or if first 5 is complete in the first world
+        if self.room_index > 12 || (self.world_index == 0 && self.room_index > 5) {
             self.room_index = 0;
             self.world_index += 1;
         }
