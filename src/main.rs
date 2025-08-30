@@ -375,10 +375,11 @@ impl<'a> Ramble<'a> {
                         projectile.player_owned = false;
                         self.projectiles.push(projectile);
                     }
-                    ProjectileFiring::Cardinally(projectile, delay) => {
+                    ProjectileFiring::Around(projectile, delay, amt) => {
                         enemy.attack_counter = *delay;
-                        for i in 0..4 {
-                            let angle = enemy.direction.to_angle() + i as f32 * PI / 2.0;
+                        for i in 0..*amt {
+                            let angle =
+                                enemy.direction.to_angle() + i as f32 * (PI * 2.0) / *amt as f32;
                             let direction = Vec2::from_angle(angle);
                             let mut projectile = projectile.clone();
                             projectile.pos = enemy.pos;

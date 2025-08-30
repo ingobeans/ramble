@@ -15,7 +15,7 @@ pub enum EnemyMovement {
 
 pub enum ProjectileFiring {
     None,
-    Cardinally(Projectile, u8),
+    Around(Projectile, u8, u8),
     Forwards(Projectile, u8),
 }
 
@@ -77,7 +77,7 @@ impl Enemy {
     pub fn new(ty: &'static EnemyType, pos: Vec2, id: usize) -> Self {
         let firing_delay = match &ty.phases.first().unwrap().firing {
             ProjectileFiring::None => 0,
-            ProjectileFiring::Cardinally(_, delay) => *delay,
+            ProjectileFiring::Around(_, delay, _) => *delay,
             ProjectileFiring::Forwards(_, delay) => *delay,
         };
         Self {
