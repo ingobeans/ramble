@@ -23,8 +23,8 @@ pub static ACID_PUDDLE: Particle = &|ctx, assets| {
     draw_ellipse(
         ctx.pos.x,
         ctx.pos.y,
-        16.0,
-        8.0,
+        14.0,
+        10.0,
         0.0,
         Color::from_hex(0x47f641),
     );

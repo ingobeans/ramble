@@ -160,13 +160,13 @@ impl<'a> Ramble<'a> {
         } else {
             (self.player.roll.1, 4.0)
         };
-        let max_y = 28.0;
+        let start_y = 28.0;
 
-        let bottom_left_corner = Vec2::new(4.0, max_y);
-        let top_right_corner = Vec2::new(SCREEN_WIDTH - 4.0, SCREEN_HEIGHT - 8.0);
+        let top_left_corner = Vec2::new(4.0, start_y);
+        let bottom_right_corner = Vec2::new(SCREEN_WIDTH - 4.0, SCREEN_HEIGHT - 8.0);
 
         self.player.pos =
-            (self.player.pos + move_vector * speed).clamp(bottom_left_corner, top_right_corner);
+            (self.player.pos + move_vector * speed).clamp(top_left_corner, bottom_right_corner);
         let door_start_x = TILES_WIDTH / 2 - 1;
 
         // go to next room
@@ -188,8 +188,8 @@ impl<'a> Ramble<'a> {
                         for _ in 0..2 {
                             let mut new = acid_puddle();
                             new.pos = Vec2::new(
-                                rand::gen_range(bottom_left_corner.x, top_right_corner.x),
-                                rand::gen_range(bottom_left_corner.y + 48.0, top_right_corner.y),
+                                rand::gen_range(top_left_corner.x, bottom_right_corner.x),
+                                rand::gen_range(top_left_corner.y, bottom_right_corner.y - 48.0),
                             );
                             self.projectiles.push(new);
                         }
@@ -204,10 +204,10 @@ impl<'a> Ramble<'a> {
                             let enemy = Enemy::new(
                                 select_random(&types),
                                 Vec2::new(
-                                    rand::gen_range(bottom_left_corner.x, top_right_corner.x),
+                                    rand::gen_range(top_left_corner.x, bottom_right_corner.x),
                                     rand::gen_range(
-                                        bottom_left_corner.y + 48.0,
-                                        top_right_corner.y,
+                                        top_left_corner.y,
+                                        bottom_right_corner.y - 48.0,
                                     ),
                                 ),
                                 0,
@@ -277,7 +277,7 @@ impl<'a> Ramble<'a> {
             {
                 for enemy in self.enemies.iter_mut() {
                     if !projectile.hit_enemies.contains(&enemy.id)
-                        && (enemy.pos - projectile.pos).length() <= 8.0
+                        && (enemy.pos - projectile.pos).length() <= projectile.radius * 1.5
                     {
                         // todo: make projectiles moving faster than 8.0 pixels/frame have their hit scan split in to multiple steps
                         for (k, mut amt) in stats.damage.clone() {
@@ -297,12 +297,12 @@ impl<'a> Ramble<'a> {
                 }
             } else if self.player.can_take_damage() {
                 let distance = (self.player.pos - projectile.pos).length();
-                if distance <= 4.0 {
+                if distance <= projectile.radius {
                     self.player.damage();
                 }
             }
             let old = projectile.pos;
-            projectile.pos = projectile.pos.clamp(bottom_left_corner, top_right_corner);
+            projectile.pos = projectile.pos.clamp(top_left_corner, bottom_right_corner);
             if projectile.pos != old {
                 // projectile collided with wall
                 new_projectiles.append(&mut projectile.on_hit());
@@ -344,8 +344,8 @@ impl<'a> Ramble<'a> {
                         // set new move target if either no previous move target was set,
                         // or distance was less than 4.0
                         enemy.move_target = Some(Vec2::new(
-                            rand::gen_range(bottom_left_corner.x, top_right_corner.x),
-                            rand::gen_range(bottom_left_corner.y, top_right_corner.y),
+                            rand::gen_range(top_left_corner.x, bottom_right_corner.x),
+                            rand::gen_range(top_left_corner.y, bottom_right_corner.y),
                         ));
                     }
                 }
@@ -396,7 +396,7 @@ impl<'a> Ramble<'a> {
             let mut collision = false;
 
             let old = enemy.pos;
-            enemy.pos = enemy.pos.clamp(bottom_left_corner, top_right_corner);
+            enemy.pos = enemy.pos.clamp(top_left_corner, bottom_right_corner);
             if enemy.pos != old {
                 collision = true;
             }

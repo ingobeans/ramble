@@ -51,6 +51,7 @@ pub struct Projectile {
     pub lifetime: u16,
     pub hit_enemies: Vec<usize>,
     pub stats: Option<Stats>,
+    pub radius: f32,
 }
 impl Projectile {
     pub fn on_hit(&self) -> Vec<Projectile> {
@@ -114,6 +115,7 @@ pub const BASE_PROJECTILE: Projectile = Projectile {
     lifetime: 0,
     stats: None,
     player_owned: false,
+    radius: 6.0,
     hit_enemies: Vec::new(),
 };
 
@@ -122,6 +124,7 @@ pub fn acid_puddle() -> Projectile {
         speed: 0.0,
         draw_type: DrawType::Particle(&particles::ACID_PUDDLE),
         lifetime: u16::MAX,
+        radius: 12.0,
         ..BASE_PROJECTILE
     }
 }
@@ -173,7 +176,7 @@ pub fn icicle() -> Projectile {
         speed: 6.0,
         lifetime: 90,
         draw_type: DrawType::Sprite(4.0, 0.0),
-        ..Default::default()
+        ..BASE_PROJECTILE
     }
 }
 pub fn power_orb() -> Projectile {
@@ -181,7 +184,7 @@ pub fn power_orb() -> Projectile {
         speed: 2.0,
         lifetime: 60,
         draw_type: DrawType::Sprite(5.0, 0.0),
-        ..Default::default()
+        ..BASE_PROJECTILE
     }
 }
 pub fn light_ray() -> Projectile {
@@ -189,15 +192,16 @@ pub fn light_ray() -> Projectile {
         speed: 16.0,
         lifetime: 6,
         draw_type: DrawType::Particle(&particles::LIGHT_RAY),
-        ..Default::default()
+        ..BASE_PROJECTILE
     }
 }
 pub fn star_explosion() -> Projectile {
     Projectile {
         speed: 0.0,
         lifetime: 15,
+        radius: 12.0,
         draw_type: DrawType::Particle(&particles::STAR_EXPLOSION),
-        ..Default::default()
+        ..BASE_PROJECTILE
     }
 }
 pub fn star_bazooka() -> Projectile {
@@ -205,7 +209,7 @@ pub fn star_bazooka() -> Projectile {
         speed: 2.0,
         lifetime: 160,
         draw_type: DrawType::Sprite(6.0, 0.0),
-        ..Default::default()
+        ..BASE_PROJECTILE
     }
 }
 pub fn fire() -> Projectile {
@@ -213,7 +217,7 @@ pub fn fire() -> Projectile {
         speed: 0.0,
         lifetime: 15,
         draw_type: DrawType::Particle(&particles::FIRE),
-        ..Default::default()
+        ..BASE_PROJECTILE
     }
 }
 pub fn lance() -> Projectile {
