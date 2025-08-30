@@ -35,3 +35,12 @@ pub static FIRE: Particle = &|ctx, assets| {
         .particles
         .draw_sprite(ctx.pos.x, ctx.pos.y, 3.0 + anim, 48.0 / 16.0, None);
 };
+pub static HAMMER: Particle = &|ctx, assets| {
+    let params = DrawTextureParams {
+        rotation: ctx.life as f32 / 2.0,
+        ..Default::default()
+    };
+    assets
+        .particles
+        .draw_sprite(ctx.pos.x, ctx.pos.y, 13.0, 0.0, Some(&params));
+};

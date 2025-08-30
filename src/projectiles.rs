@@ -195,6 +195,15 @@ pub fn slow_arrow() -> Projectile {
         ..BASE_PROJECTILE
     }
 }
+pub fn hammer() -> Projectile {
+    Projectile {
+        speed: 3.0,
+        draw_type: DrawType::Particle(particles::HAMMER),
+        lifetime: 140,
+        boomerang: true,
+        ..BASE_PROJECTILE
+    }
+}
 pub fn boxing_glove() -> Projectile {
     Projectile {
         speed: 4.0,

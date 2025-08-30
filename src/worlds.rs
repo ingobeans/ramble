@@ -86,7 +86,31 @@ pub static CRYPT: LazyLock<World> = LazyLock::new(|| World {
             max_health: 6.0,
         },
     ],
-    other: vec![],
+    other: vec![
+        // skeleton with hammer
+        EnemyType {
+            speed: 0.45,
+            phases: vec![
+                EnemyPhase {
+                    sprite_x: 9.0,
+                    sprite_y: 1.0,
+                    movement: EnemyMovement::Chase,
+                    firing: ProjectileFiring::None,
+                    end: PhaseEndCondition::PlayerDistance(48.0),
+                    frames: 2,
+                },
+                EnemyPhase {
+                    sprite_x: 11.0,
+                    sprite_y: 1.0,
+                    movement: EnemyMovement::Still,
+                    firing: ProjectileFiring::Forwards(projectiles::hammer(), 70),
+                    end: PhaseEndCondition::Frames(70),
+                    frames: 1,
+                },
+            ],
+            max_health: 20.0,
+        },
+    ],
     miniboss: vec![
         // skeleton-slime
         EnemyType {

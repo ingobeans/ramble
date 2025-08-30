@@ -446,6 +446,7 @@ impl<'a> Ramble<'a> {
                 PhaseEndCondition::None => false,
                 PhaseEndCondition::SingleFrame => true,
                 PhaseEndCondition::Collision => collision,
+                PhaseEndCondition::PlayerDistance(dist) => player_delta.length() <= *dist,
                 PhaseEndCondition::Frames(target) => {
                     if enemy.phase_frame_counter >= *target {
                         enemy.phase_frame_counter = 0;
@@ -589,6 +590,8 @@ impl<'a> Ramble<'a> {
     }
     async fn run(&mut self) {
         self.dungeon_manager.world = &worlds::CRYPT;
+        self.give_curse(ChaosCurse::BonusEnemies);
+
         let rt = render_target(SCREEN_WIDTH as u32, SCREEN_HEIGHT as u32);
         rt.texture.set_filter(FilterMode::Nearest);
         let mut world_camera = Camera2D {

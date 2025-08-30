@@ -40,6 +40,8 @@ pub enum PhaseEndCondition {
     HealthUnder(f32),
     /// Phase ends when enemy collides with the player or a wall.
     Collision,
+    /// Distance to player is less than
+    PlayerDistance(f32),
 }
 
 pub struct EnemyPhase {
