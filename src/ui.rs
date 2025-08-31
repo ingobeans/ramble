@@ -35,7 +35,7 @@ impl UiManager {
                 None,
             );
         }
-        if is_key_pressed(KeyCode::Escape) {
+        if is_key_pressed(KeyCode::Escape) || is_key_pressed(KeyCode::F) {
             self.inv_open = !self.inv_open;
         }
 
