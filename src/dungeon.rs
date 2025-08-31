@@ -24,13 +24,17 @@ impl DungeonManager {
             total_room_index: 0,
         }
     }
-    pub fn spawn_room(&mut self) -> Vec<Enemy> {
+    pub fn spawn_room(&mut self) -> Option<Vec<Enemy>> {
         self.room_index += 1;
         self.total_room_index += 1;
-        // move to next world if all 12 levels complete or if first 5 is complete in the first world
-        if self.room_index > 12 || (self.world_index == 0 && self.room_index > 5) {
+        // move to next world if all 12 levels complete or if first 10 is complete in the first world
+        if self.room_index > 12 || (self.world_index == 0 && self.room_index > 10) {
             self.room_index = 0;
             self.world_index += 1;
+            if self.world_index >= self.worlds.len() {
+                self.world_index -= 1;
+                return None;
+            }
         }
         fn get_types(dungeon_manager: &DungeonManager) -> HashMap<EnemyTier, &'static EnemyType> {
             hashmap!(
@@ -71,7 +75,7 @@ impl DungeonManager {
             }
         }
 
-        enemies
+        Some(enemies)
     }
 }
 

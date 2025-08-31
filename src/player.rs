@@ -255,7 +255,7 @@ impl Player {
     pub fn can_take_damage(&self) -> bool {
         self.roll.0 == 0 && self.invuln_frames == 0
     }
-    pub fn damage(&mut self) {
+    pub fn damage(&mut self) -> bool {
         self.invuln_frames = 100;
         // find where to take heart
         let mut items: Vec<&mut Option<Item>> = self.talismans.iter_mut().collect();
@@ -269,14 +269,13 @@ impl Player {
                 && item.internal_stats.lives > 0
             {
                 item.internal_stats.lives -= 1;
-                return;
+                return false;
             }
         }
 
         self.internal_stats.lives -= 1;
-        if self.internal_stats.lives == 0 {
-            todo!("game over!");
-        }
+        // return whether game over
+        self.internal_stats.lives == 0
     }
     pub fn draw_character(
         &self,

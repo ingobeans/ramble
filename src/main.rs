@@ -23,23 +23,26 @@ use ui::UiManager;
 use utils::*;
 use worlds::*;
 
-enum RoundState {
-    Active,
-    Post(u32, Option<[Item; 3]>),
-    Pre(u32),
+enum GameState {
+    RoundActive,
+    PostRound(u32, Option<[Item; 3]>),
+    PreRound(u32),
+    /// Bool is if game over is because of win. False if loss
+    GameOver(u32, bool),
 }
-impl RoundState {
+impl GameState {
     fn should_draw(&self) -> bool {
         match self {
-            RoundState::Active | RoundState::Post(_, _) => true,
-            RoundState::Pre(frame) => *frame >= 40 / 2,
+            GameState::GameOver(_, _) | GameState::RoundActive | GameState::PostRound(_, _) => true,
+            GameState::PreRound(frame) => *frame >= 40 / 2,
         }
     }
     fn door_frame(&self) -> f32 {
         match self {
-            RoundState::Active => 0.0,
-            RoundState::Post(frame, _) => (*frame as f32 / 10.0 * 4.0).floor().min(3.0) * 2.0,
-            RoundState::Pre(frame) => {
+            GameState::GameOver(_, _) => 0.0,
+            GameState::RoundActive => 0.0,
+            GameState::PostRound(frame, _) => (*frame as f32 / 10.0 * 4.0).floor().min(3.0) * 2.0,
+            GameState::PreRound(frame) => {
                 if *frame >= PREROUND_TRANSITION_TIME / 2 {
                     0.0
                 } else {
@@ -52,7 +55,7 @@ impl RoundState {
 struct Ramble<'a> {
     assets: &'a Assets,
     player: Player,
-    state: RoundState,
+    state: GameState,
     enemies: Vec<Enemy>,
     dropped_items: Vec<(Vec2, Item)>,
     enemy_id: usize,
@@ -63,7 +66,7 @@ struct Ramble<'a> {
 impl<'a> Ramble<'a> {
     fn new(assets: &'a Assets, player: Player) -> Self {
         Ramble {
-            state: RoundState::Post(100, None),
+            state: GameState::PostRound(100, None),
             assets,
             player,
             enemies: Vec::new(),
@@ -171,7 +174,7 @@ impl<'a> Ramble<'a> {
         let door_start_x = TILES_WIDTH / 2 - 1;
 
         // go to next room
-        if let RoundState::Post(_, _) = self.state
+        if let GameState::PostRound(_, _) = self.state
             && self.player.pos.y == 28.0
             && (door_start_x as f32 * 16.0 + 4.0..door_start_x as f32 * 16.0 + 28.0)
                 .contains(&self.player.pos.x)
@@ -181,8 +184,13 @@ impl<'a> Ramble<'a> {
             self.dropped_items.clear();
             self.enemies.clear();
             self.projectiles.clear();
-            let mut e = self.dungeon_manager.spawn_room();
-            self.spawn_enemies(&mut e);
+            let e = self.dungeon_manager.spawn_room();
+            if let Some(mut e) = e {
+                self.spawn_enemies(&mut e);
+            } else {
+                self.state = GameState::GameOver(0, true);
+                return;
+            }
             let mut extra_enemies = Vec::new();
             for curse in self.player.curses.iter() {
                 match *curse {
@@ -230,7 +238,7 @@ impl<'a> Ramble<'a> {
                 }
             }
             self.spawn_enemies(&mut extra_enemies);
-            self.state = RoundState::Pre(0);
+            self.state = GameState::PreRound(0);
         }
 
         if move_vector != Vec2::ZERO {
@@ -328,7 +336,9 @@ impl<'a> Ramble<'a> {
                 } else if self.player.can_take_damage() {
                     let distance = (self.player.pos - projectile.pos).length();
                     if distance <= projectile.radius {
-                        self.player.damage();
+                        if self.player.damage() {
+                            self.state = GameState::GameOver(0, false);
+                        }
                     }
                 }
             }
@@ -436,7 +446,9 @@ impl<'a> Ramble<'a> {
 
             // dmg player on contact
             if player_delta.length() <= 4.0 && self.player.can_take_damage() {
-                self.player.damage();
+                if self.player.damage() {
+                    self.state = GameState::GameOver(0, false);
+                }
                 collision = true;
             }
 
@@ -469,11 +481,12 @@ impl<'a> Ramble<'a> {
             enemy.health > 0.0
         });
 
-        if let RoundState::Active = self.state
+        if let GameState::RoundActive = self.state
             && self.enemies.is_empty()
         {
             self.projectiles.retain(|f| f.player_owned);
-            self.state = RoundState::Post(0, Some(std::array::from_fn(|_| self.get_item_reward())))
+            self.state =
+                GameState::PostRound(0, Some(std::array::from_fn(|_| self.get_item_reward())))
         }
     }
     fn draw_ui(&mut self, mouse_x: f32, mouse_y: f32, ui_width: f32) {
@@ -526,7 +539,7 @@ impl<'a> Ramble<'a> {
         }
     }
     fn handle_item_shop(&mut self) {
-        if let RoundState::Post(frame, items) = &mut self.state {
+        if let GameState::PostRound(frame, items) = &mut self.state {
             if *frame <= 40 {
                 let y = 88.0;
                 let anim = (*frame as f32 / 30.0).min(1.0);
@@ -534,7 +547,7 @@ impl<'a> Ramble<'a> {
                 draw_ellipse(x, y + 20.0, anim * 48.0, anim * 16.0, 0.0, BLACK);
                 if *frame > 30 {
                     let y = y + 14.0 - (*frame - 30) as f32 / 10.0 * 14.0;
-                    self.assets.world.draw_sprite(x, y, 0.0, 1.0, None);
+                    draw_texture(&self.assets.shop, x - 3.0 * 16.0, y, WHITE);
                     for index in 0..3 {
                         let x = x - 32.0 + 16.0 * index as f32;
 
@@ -585,7 +598,7 @@ impl<'a> Ramble<'a> {
             }
         }
     }
-    async fn run(&mut self) {
+    async fn run(&mut self) -> bool {
         let mut world_camera = create_camera(SCREEN_WIDTH, SCREEN_HEIGHT);
         let mut last = get_time();
 
@@ -665,16 +678,23 @@ impl<'a> Ramble<'a> {
                 last = now;
 
                 match &mut self.state {
-                    RoundState::Active => {
+                    GameState::GameOver(frames, win) => {
+                        *frames += 1;
+                        if *frames > 30 {
+                            set_default_camera();
+                            return *win;
+                        }
+                    }
+                    GameState::RoundActive => {
                         self.update(mouse_x, mouse_y);
                     }
-                    RoundState::Post(frame, _) => {
+                    GameState::PostRound(frame, _) => {
                         if *frame != 40 {
                             *frame = frame.saturating_add(1);
                         }
                         self.update(mouse_x, mouse_y);
                     }
-                    RoundState::Pre(frame) => {
+                    GameState::PreRound(frame) => {
                         let max = PREROUND_TRANSITION_TIME + PREROUND_GRACE_TIME;
                         *frame += 1;
                         if *frame < PREROUND_TRANSITION_TIME / 2 {
@@ -687,7 +707,7 @@ impl<'a> Ramble<'a> {
                         }
                         if *frame > max {
                             world_camera.offset.y = 0.0;
-                            self.state = RoundState::Active;
+                            self.state = GameState::RoundActive;
                         }
                     }
                 }
@@ -731,6 +751,15 @@ impl<'a> Ramble<'a> {
                     ..Default::default()
                 },
             );
+            if let GameState::GameOver(frames, _) = &self.state {
+                draw_rectangle(
+                    0.0,
+                    0.0,
+                    screen_width,
+                    screen_height * (*frames as f32 / 30.0),
+                    BLACK,
+                );
+            }
             next_frame().await
         }
     }
@@ -774,6 +803,7 @@ async fn main() {
         ),
     ];
     let mut class_index: usize = 0;
+    let mut gameover_screen: Option<bool> = None;
 
     // main menu
     let camera = create_camera(SCREEN_WIDTH, SCREEN_HEIGHT);
@@ -787,95 +817,136 @@ async fn main() {
             mouse_y / scale_factor,
         );
         set_camera(&camera);
-        clear_background(Color::from_hex(0x180d2f));
+        clear_background(BLACK);
+        if let Some(win) = gameover_screen {
+            let scale = 2.0;
+            let width = 3.0 * 16.0;
+            let height = 16.0;
+            let params = DrawTextureParams {
+                source: Some(Rect {
+                    x: 0.0,
+                    y: 48.0 + if win { 16.0 } else { 0.0 },
+                    w: width,
+                    h: height,
+                }),
+                dest_size: Some(Vec2::new(width * scale, height * scale)),
+                ..Default::default()
+            };
+            let x = (SCREEN_WIDTH - width * scale) / 2.0;
+            draw_texture_ex(&assets.ui.texture, x, 4.0, WHITE, params);
 
-        let scale = 2.0;
-        let width = 3.0 * 16.0;
-        let height = 32.0;
-        let params = DrawTextureParams {
-            source: Some(Rect {
-                x: 0.0,
-                y: 16.0,
-                w: width,
-                h: height,
-            }),
-            dest_size: Some(Vec2::new(width * scale, height * scale)),
-            ..Default::default()
-        };
-        let x = (SCREEN_WIDTH - width * scale) / 2.0;
-        draw_texture_ex(&assets.ui.texture, x, 4.0, WHITE, params);
+            if ui::draw_button(
+                "return to menu",
+                &assets,
+                x,
+                SCREEN_HEIGHT - 64.0,
+                width * scale,
+                mouse_x,
+                mouse_y,
+            ) {
+                gameover_screen = None;
+                continue;
+            }
+        } else {
+            let scale = 2.0;
+            let width = 3.0 * 16.0;
+            let height = 32.0;
+            let params = DrawTextureParams {
+                source: Some(Rect {
+                    x: 0.0,
+                    y: 16.0,
+                    w: width,
+                    h: height,
+                }),
+                dest_size: Some(Vec2::new(width * scale, height * scale)),
+                ..Default::default()
+            };
+            let x = (SCREEN_WIDTH - width * scale) / 2.0;
+            draw_texture_ex(&assets.ui.texture, x, 4.0, WHITE, params);
 
-        let preview_height = 100.0;
-        let preview_y = 6.0 + height * scale;
-        ui::draw_ui_rect(x, preview_y, width * scale, preview_height);
+            let preview_height = 100.0;
+            let preview_y = 6.0 + height * scale;
+            ui::draw_ui_rect(x, preview_y, width * scale, preview_height);
 
-        let mut player = Player::new(Vec2::new(SCREEN_WIDTH / 2.0, SCREEN_HEIGHT / 2.0));
-        let class_name;
-        (class_name, player.hand, player.helmet, player.chestplate) =
-            classes[class_index % classes.len()].clone();
-        assets.draw_text(
-            class_name,
-            x + (width * scale - class_name.chars().count() as f32 * 4.0) / 2.0,
-            preview_y + 4.0,
-        );
+            let mut player = Player::new(Vec2::new(SCREEN_WIDTH / 2.0, SCREEN_HEIGHT / 2.0));
+            let class_name;
+            (class_name, player.hand, player.helmet, player.chestplate) =
+                classes[class_index % classes.len()].clone();
+            assets.draw_text(
+                class_name,
+                x + (width * scale - class_name.chars().count() as f32 * 4.0) / 2.0,
+                preview_y + 4.0,
+            );
 
-        let character_size = 48.0;
-        let params = DrawTextureParams {
-            dest_size: Some(Vec2::new(character_size, character_size)),
-            ..Default::default()
-        };
-        player.draw_character(
-            x + (width * scale - character_size + 16.0) / 2.0,
-            preview_y + 32.0,
-            &assets,
-            0.0,
-            Some(&params),
-        );
+            let character_size = 48.0;
+            let params = DrawTextureParams {
+                dest_size: Some(Vec2::new(character_size, character_size)),
+                ..Default::default()
+            };
+            player.draw_character(
+                x + (width * scale - character_size + 16.0) / 2.0,
+                preview_y + 32.0,
+                &assets,
+                0.0,
+                Some(&params),
+            );
 
-        if ui::draw_button(
-            "select and start",
-            &assets,
-            x,
-            SCREEN_HEIGHT - 16.0,
-            width * scale,
-            mouse_x,
-            mouse_y,
-        ) {
-            // run game
-            let mut ramble = Ramble::new(&assets, player);
-            ramble.run().await;
-            class_index = 0;
-            continue;
-        }
-        if ui::draw_button(
-            ")",
-            &assets,
-            x + width * scale + 2.0,
-            preview_y + preview_height / 2.0,
-            6.0,
-            mouse_x,
-            mouse_y,
-        ) {
-            class_index += 1;
-        }
-        if ui::draw_button(
-            "(",
-            &assets,
-            x - 8.0,
-            preview_y + preview_height / 2.0,
-            6.0,
-            mouse_x,
-            mouse_y,
-        ) {
-            if class_index == 0 {
-                class_index = classes.len() - 1;
-            } else {
-                class_index -= 1;
+            if ui::draw_button(
+                "select and start",
+                &assets,
+                x,
+                SCREEN_HEIGHT - 32.0,
+                width * scale,
+                mouse_x,
+                mouse_y,
+            ) {
+                // run game
+                let mut ramble = Ramble::new(&assets, player);
+                gameover_screen = Some(ramble.run().await);
+                class_index = 0;
+                continue;
+            }
+            if ui::draw_button(
+                "exit game",
+                &assets,
+                x,
+                SCREEN_HEIGHT - 16.0,
+                width * scale,
+                mouse_x,
+                mouse_y,
+            ) {
+                return;
+            }
+            if ui::draw_button(
+                ")",
+                &assets,
+                x + width * scale + 2.0,
+                preview_y + preview_height / 2.0,
+                6.0,
+                mouse_x,
+                mouse_y,
+            ) {
+                class_index += 1;
+            }
+            if ui::draw_button(
+                "(",
+                &assets,
+                x - 8.0,
+                preview_y + preview_height / 2.0,
+                6.0,
+                mouse_x,
+                mouse_y,
+            ) {
+                if class_index == 0 {
+                    class_index = classes.len() - 1;
+                } else {
+                    class_index -= 1;
+                }
             }
         }
 
         set_default_camera();
-        clear_background(Color::from_hex(0x180d2f));
+        clear_background(BLACK);
 
         draw_texture_ex(
             &camera.render_target.as_ref().unwrap().texture,
