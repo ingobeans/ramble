@@ -206,6 +206,15 @@ pub fn draw_hover_item(item: &Item, x: f32, y: f32, assets: &Assets) {
     }
 }
 
+pub fn draw_item_tooltip(item: &Item, assets: &Assets) {
+    draw_hover_item(
+        item,
+        (SCREEN_WIDTH - 128.0) / 2.0,
+        SCREEN_HEIGHT - 63.0,
+        assets,
+    );
+}
+
 pub fn draw_tooltip(text: &str, assets: &Assets) {
     let width = text.chars().count() as f32 * 4.0 + 4.0;
     let y = SCREEN_HEIGHT - 32.0;

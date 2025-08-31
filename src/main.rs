@@ -518,7 +518,8 @@ impl<'a> Ramble<'a> {
         }
         if let Some(item_under_player) = item_under_player {
             if self.player.inv_slot_free() {
-                ui::draw_tooltip("press e to pick up", self.assets);
+                ui::draw_item_tooltip(&self.dropped_items[item_under_player.0].1, self.assets);
+                ui::draw_tooltip("e: pick up", self.assets);
                 if is_key_pressed(KeyCode::E) {
                     let item = self.dropped_items.remove(item_under_player.0).1;
                     if item.name == "gift" {
@@ -567,10 +568,8 @@ impl<'a> Ramble<'a> {
                                 <= 18.0_f32.powi(2)
                             {
                                 if self.player.inv_slot_free() {
-                                    ui::draw_tooltip(
-                                        "press e to deal with the chaos demon for this item",
-                                        self.assets,
-                                    );
+                                    ui::draw_tooltip("e: deal with the chaos demon", self.assets);
+                                    ui::draw_item_tooltip(item, self.assets);
                                     if is_key_pressed(KeyCode::E) {
                                         let o = items.take().unwrap();
                                         self.player
