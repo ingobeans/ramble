@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use crate::{
     assets::Assets,
-    items::Item,
+    items::{Item, ItemType},
     projectiles::{DamageType, Projectile},
     utils::*,
 };
@@ -214,6 +214,34 @@ impl Player {
     }
     /// Panics if inventory full
     pub fn give_item(&mut self, item: Item) {
+        match &item.ty {
+            ItemType::Chestplate => {
+                if self.chestplate.is_none() {
+                    self.chestplate = Some(item);
+                    return;
+                }
+            }
+            ItemType::Helmet => {
+                if self.helmet.is_none() {
+                    self.helmet = Some(item);
+                    return;
+                }
+            }
+            ItemType::Held(_) => {
+                if self.hand.is_none() {
+                    self.hand = Some(item);
+                    return;
+                }
+            }
+            ItemType::Talisman => {
+                for t in self.talismans.iter_mut() {
+                    if t.is_none() {
+                        *t = Some(item);
+                        return;
+                    }
+                }
+            }
+        };
         let inventory_curse_count = self
             .curses
             .iter()
@@ -227,7 +255,25 @@ impl Player {
         }
         panic!("Inventory full!");
     }
-    pub fn inv_slot_free(&self) -> bool {
+    pub fn inv_slot_free(&self, ty: &ItemType) -> bool {
+        if match ty {
+            ItemType::Chestplate => self.chestplate.is_none(),
+            ItemType::Helmet => self.helmet.is_none(),
+            ItemType::Held(_) => self.hand.is_none(),
+            ItemType::Talisman => {
+                let mut y = false;
+                for t in self.talismans.iter() {
+                    if t.is_none() {
+                        y = true;
+                        break;
+                    }
+                }
+                y
+            }
+        } {
+            return true;
+        }
+
         let inventory_curse_count = self
             .curses
             .iter()

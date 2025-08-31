@@ -135,7 +135,7 @@ impl<'a> Ramble<'a> {
             }
         }
         for item in lost_items.into_iter() {
-            if self.player.inv_slot_free() {
+            if self.player.inv_slot_free(&item.ty) {
                 self.player.give_item(item);
             } else {
                 let pos = self.player.pos + Vec2::from_angle(rand::gen_range(0.0, PI * 2.0)) * 5.0;
@@ -517,8 +517,9 @@ impl<'a> Ramble<'a> {
             }
         }
         if let Some(item_under_player) = item_under_player {
-            if self.player.inv_slot_free() {
-                ui::draw_item_tooltip(&self.dropped_items[item_under_player.0].1, self.assets);
+            let r = &self.dropped_items[item_under_player.0].1;
+            if self.player.inv_slot_free(&r.ty) {
+                ui::draw_item_tooltip(r, self.assets);
                 ui::draw_tooltip("e: pick up", self.assets);
                 if is_key_pressed(KeyCode::E) {
                     let item = self.dropped_items.remove(item_under_player.0).1;
@@ -567,7 +568,7 @@ impl<'a> Ramble<'a> {
                                 + (self.player.pos.y - y).powi(2)
                                 <= 18.0_f32.powi(2)
                             {
-                                if self.player.inv_slot_free() {
+                                if self.player.inv_slot_free(&item.ty) {
                                     ui::draw_tooltip("e: deal with the chaos demon", self.assets);
                                     ui::draw_item_tooltip(item, self.assets);
                                     if is_key_pressed(KeyCode::E) {
