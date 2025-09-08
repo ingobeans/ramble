@@ -16,3 +16,18 @@ You're forced to deal with a chaos demon to get better gear, in turn making your
     [WASD] move
 
 The game is really inspired by tiny rogues as is probably apparent, as well as a bit of path of acra. The game also has no saving because its a roguelike (definitely not that i ran out of time and i otherwise wouldve implemented that)
+
+
+## Building from source
+
+this project is made in rust so obviously you'll need rust (with cargo) installed.
+
+to run standalone you can just do:
+```bash
+cargo run
+```
+
+and to build for web and host on localhost with `basic-http-server`, do 
+```bash
+cargo build --release --target wasm32-unknown-unknown && cp target/wasm32-unknown-unknown/release/ramble.wasm web/ && basic-http-server web/
+```
