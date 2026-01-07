@@ -60,6 +60,8 @@ struct Ramble<'a> {
     dropped_items: Vec<(Vec2, Item)>,
     enemy_id: usize,
     projectiles: Vec<Projectile>,
+    ui_camera: Camera2D,
+    prev_screen_size: (f32, f32),
     dungeon_manager: DungeonManager,
     ui_manager: UiManager,
 }
@@ -73,6 +75,8 @@ impl<'a> Ramble<'a> {
             dropped_items: Vec::new(),
             enemy_id: 0,
             projectiles: Vec::new(),
+            prev_screen_size: (0.0, 0.0),
+            ui_camera: create_camera(SCREEN_WIDTH, SCREEN_HEIGHT),
             dungeon_manager: DungeonManager::new(vec![&FOREST, &CRYPT]),
             ui_manager: UiManager::default(),
         }
@@ -630,7 +634,11 @@ impl<'a> Ramble<'a> {
             let ui_width = screen_width / scale_factor;
             let ui_height = screen_height / scale_factor;
 
-            let ui_camera = create_camera(ui_width, ui_height);
+            let screen_size = (screen_width, screen_height);
+            if screen_size != self.prev_screen_size {
+                self.prev_screen_size = screen_size;
+                self.ui_camera = create_camera(ui_width, ui_height);
+            }
 
             clear_background(
                 self.dungeon_manager.worlds[self.dungeon_manager.world_index].background_color,
@@ -722,7 +730,7 @@ impl<'a> Ramble<'a> {
             if self.player.pos.y <= 94.0 {
                 self.handle_item_shop()
             }
-            set_camera(&ui_camera);
+            set_camera(&self.ui_camera);
             clear_background(Color::from_rgba(0, 0, 0, 0));
             self.draw_ui(mouse_x, mouse_y, ui_width);
 
@@ -742,7 +750,7 @@ impl<'a> Ramble<'a> {
                 },
             );
             draw_texture_ex(
-                &ui_camera.render_target.as_ref().unwrap().texture,
+                &self.ui_camera.render_target.as_ref().unwrap().texture,
                 horizontal_padding,
                 0.0,
                 WHITE,
